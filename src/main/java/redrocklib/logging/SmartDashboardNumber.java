@@ -1,4 +1,4 @@
-package frc.robot.redrocklib.logging;
+package redrocklib.logging;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 

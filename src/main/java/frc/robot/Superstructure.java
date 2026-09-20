@@ -1,14 +1,44 @@
 package frc.robot;
 
+import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.EndEffector;
+import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.LED;
+
 public class Superstructure {
-    public enum RobotPos{
+    private static Superstructure instance = null;
+
+    private Intake intake = Intake.getInstance();
+    private EndEffector endEffector = EndEffector.getInstance();
+    private Arm arm = Arm.getInstance();
+    private LED led = LED.getInstance();
+    private Elevator elevator = Elevator.getInstance();
+
+    public static enum RobotState{
         L1,
         L2,
         L3,
         INTAKING,
-        SOURCECELL,
-        SOURCESHELL,
-        STOW,
-        SHELF
+        SOURCE_CELL,
+        SOURCE_SHELL,
+        SHELF,
+        STOPPED,
+        IDLE,
+        STOW
+    }
+
+    private RobotState wantedState = RobotState.IDLE;
+    private RobotState currentState = RobotState.IDLE;
+
+    public RobotState setCurrentRobotState(RobotState p){
+        this.intake.goToPos(p);
+        this.arm.goToPos(p);
+        this.endEffector.goToPos(p);
+    }
+
+    public static Superstructure getInstance(){
+        if(instance == null) return instance = new Superstructure();
+        return instance;
     }
 }

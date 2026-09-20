@@ -1,4 +1,4 @@
-package frc.robot.redrocklib.wrappers;
+package redrocklib.wrappers;
 
 import java.util.ArrayList;
 
@@ -20,7 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import frc.robot.redrocklib.logging.SmartDashboardNumber;
+import redrocklib.logging.SmartDashboardNumber;
 
 public class RedRockTalon {
     public static final boolean kEnableMotorDashboardTuning = true;
@@ -28,7 +28,7 @@ public class RedRockTalon {
     /**
      * main motor
      */
-    public final Talon motor;
+    public final TalonFX motor;
 
     private SmartDashboardNumber kS;
     private SmartDashboardNumber kA;
