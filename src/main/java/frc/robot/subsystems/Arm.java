@@ -24,6 +24,8 @@ public class Arm extends SubsystemBase{
     private final RedRockTalon pivotMotor = new RedRockTalon(0, "Arm/pivot-motor", "*");
     private final CANcoder encoder = new CANcoder(0, "*");
 
+    private SmartDashboardNumber kRotorToSensorRatio = new SmartDashboardNumber("Arm/CANCoder/k-rotor-to-sensor-ratio", 0); //TODO
+    private SmartDashboardNumber kSensorToMechRatio = new SmartDashboardNumber("Arm/CANCoder/k-sensor-to-mech-ratio", 0); //TODO
     private SmartDashboardNumber l1ArmPos = new SmartDashboardNumber("Arm/Positions/L1", 0); //TODO
     private SmartDashboardNumber l2ArmPos = new SmartDashboardNumber("Arm/Positions/L2", 0); //TODO
     private SmartDashboardNumber l3ArmPos = new SmartDashboardNumber("Arm/Positions/L3", 0); //TODO
@@ -40,8 +42,8 @@ public class Arm extends SubsystemBase{
         FeedbackConfigs feedbackConfigs = new FeedbackConfigs()
         .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
         .withFeedbackRemoteSensorID(encoder.getDeviceID())
-        .withRotorToSensorRatio(kRotorToSensorRatio)
-        .withSensorToMechanismRatio(kSensorToMechRatio);
+        .withRotorToSensorRatio(kRotorToSensorRatio.getNumber()) //How many motor rotations are there for every rotation of the CANCoder?
+        .withSensorToMechanismRatio(kSensorToMechRatio.getNumber()); //How many CANCoder rotations are there to each mechanism rotation
 
         this.pivotMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
