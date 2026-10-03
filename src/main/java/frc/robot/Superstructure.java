@@ -28,13 +28,31 @@ public class Superstructure {
         STOW
     }
 
+/* For auto align
+    public static enum FieldPos{
+        LEFT,
+        LEFTMID,
+        RIGHT,
+        RIGHTMID
+    }
+*/
+
+
     private RobotState wantedState = RobotState.IDLE;
     private RobotState currentState = RobotState.IDLE;
 
-    public RobotState setCurrentRobotState(RobotState p){
-        this.intake.goToPos(p);
-        this.arm.goToPos(p);
-        this.endEffector.goToPos(p);
+    public RobotState setCurrentRobotState(RobotState pos, double dist){
+        this.intake.goToPos(pos);
+        this.arm.goToArmPosCommand(pos, dist);
+        this.endEffector.goToPos(pos);
+    }
+
+    public RobotState getWantedState(){
+        return wantedState;
+    }
+
+    public RobotState getCurrentState(){
+        return currentState;
     }
 
     public static Superstructure getInstance(){

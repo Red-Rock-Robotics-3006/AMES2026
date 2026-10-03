@@ -98,7 +98,7 @@ public class EndEffectorPrototype extends SubsystemBase{
     }
 
     public EndEffectorPrototype getInstance(){
-        if(instance == null) return new EndEffectorPrototype();
+        if(instance == null) instance = new EndEffectorPrototype();
         return instance;
     }
 }
