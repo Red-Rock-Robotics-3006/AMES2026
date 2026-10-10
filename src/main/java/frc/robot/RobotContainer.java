@@ -26,6 +26,9 @@ public class RobotContainer {
     testStick.a()
       .onTrue(endEffectorPrototype.decreaseEndEffectorSpeedTestCommand())
       .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
+    testStick.x()
+      .onTrue(endEffectorPrototype.startEndEffectorTestReverseCommand())
+      .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
 
     testStick.b()
       .onTrue(endEffectorPrototype.startEndEffectorTestCommand())

@@ -17,9 +17,10 @@ import redrocklib.wrappers.RedRockTalon;
 public class EndEffectorPrototype extends SubsystemBase{
     private static EndEffectorPrototype instance = null;
 
-    private final RedRockTalon wheelMotor = new RedRockTalon(0, "EndEffectorPrototype/wheel-motor"); //TODO
+    private final RedRockTalon wheelMotor = new RedRockTalon(31, "EndEffectorPrototype/wheel-motor"); //TODO
 
-    private SmartDashboardNumber wheelSpeedRPM = new SmartDashboardNumber("EndEffectorPrototype/wheel-speed-rpm", 200);
+    private SmartDashboardNumber wheelSpeedRPM = new SmartDashboardNumber("EndEffectorPrototype/wheel-speed-rpm", 2000);
+    private SmartDashboardNumber intakeRPM = new SmartDashboardNumber("EndEffectorPrototype/wheel-intake-rpm", -1200);
 
     public EndEffectorPrototype(){
         this.wheelMotor.withMotorOutputConfigs(
@@ -34,7 +35,7 @@ public class EndEffectorPrototype extends SubsystemBase{
             .withKA(0) //TODO
             .withKS(0) 
             .withKV(0)
-            .withKP(0)
+            .withKP(0.2)
             .withKI(0) 
             .withKD(0) 
         )
@@ -58,6 +59,10 @@ public class EndEffectorPrototype extends SubsystemBase{
         wheelMotor.setMotionMagicVelocity(wheelSpeedRPM.getNumber());
     }
 
+    private void setSpeedReverse(){
+        wheelMotor.setMotionMagicVelocity(intakeRPM.getNumber());
+    }
+
     private void stop(){
         wheelMotor.motor.setControl(new CoastOut());
     }
@@ -72,6 +77,10 @@ public class EndEffectorPrototype extends SubsystemBase{
 
     public Command startEndEffectorTestCommand(){
         return Commands.runOnce(() -> this.setSpeed(), this);
+    }
+
+    public Command startEndEffectorTestReverseCommand(){
+        return Commands.runOnce(() -> this.setSpeedReverse(), this);
     }
 
     public Command stopEndEffectorTestCommand(){

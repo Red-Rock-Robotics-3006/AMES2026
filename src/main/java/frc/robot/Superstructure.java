@@ -1,7 +1,7 @@
 package frc.robot;
 
 import frc.robot.subsystems.Arm;
-import frc.robot.subsystems.Elevator;
+// import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LED;
@@ -13,19 +13,20 @@ public class Superstructure {
     private EndEffector endEffector = EndEffector.getInstance();
     private Arm arm = Arm.getInstance();
     private LED led = LED.getInstance();
-    private Elevator elevator = Elevator.getInstance();
+    // private Elevator elevator = Elevator.getInstance();
 
     public static enum RobotState{
         L1,
         L2,
         L3,
-        INTAKING,
+        INTAKING_CELL,
+        INTAKING_SHELL,
         SOURCE_CELL,
         SOURCE_SHELL,
         SHELF,
         STOPPED,
         IDLE,
-        STOW
+        STOW,
     }
 
 /* For auto align
@@ -42,9 +43,15 @@ public class Superstructure {
     private RobotState currentState = RobotState.IDLE;
 
     public RobotState setCurrentRobotState(RobotState pos, double dist){
-        this.intake.goToPos(pos);
-        this.arm.goToArmPosCommand(pos, dist);
-        this.endEffector.goToPos(pos);
+        // this.intake.goToPos(pos);
+        this.arm.goToPosCommand(pos, dist);
+        // this.endEffector.goToPos(pos);
+    }
+
+    public RobotState setCurrentRobotStateStatic(RobotState pos){
+        // this.intake.goToPos(pos);
+        this.arm.goToStaticPosCommand(pos);
+        // this.endEffector.goToPos(pos);
     }
 
     public RobotState getWantedState(){
@@ -58,5 +65,10 @@ public class Superstructure {
     public static Superstructure getInstance(){
         if(instance == null) return instance = new Superstructure();
         return instance;
+    }
+
+    public void initializeBot(){
+        this.arm.zeroArmCommand();
+        
     }
 }
