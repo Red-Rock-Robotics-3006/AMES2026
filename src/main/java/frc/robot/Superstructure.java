@@ -1,5 +1,8 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import frc.robot.subsystems.Arm;
 // import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
@@ -12,7 +15,7 @@ public class Superstructure {
     private Intake intake = Intake.getInstance();
     private EndEffector endEffector = EndEffector.getInstance();
     private Arm arm = Arm.getInstance();
-    private LED led = LED.getInstance();
+    // private LED led = LED.getInstance();
     // private Elevator elevator = Elevator.getInstance();
 
     public static enum RobotState{
@@ -24,7 +27,6 @@ public class Superstructure {
         SOURCE_CELL,
         SOURCE_SHELL,
         SHELF,
-        STOPPED,
         IDLE,
         STOW,
     }
@@ -42,17 +44,14 @@ public class Superstructure {
     private RobotState wantedState = RobotState.IDLE;
     private RobotState currentState = RobotState.IDLE;
 
-    public RobotState setCurrentRobotState(RobotState pos, double dist){
-        // this.intake.goToPos(pos);
-        this.arm.goToPosCommand(pos, dist);
-        // this.endEffector.goToPos(pos);
+    private void setCurrentRobotState(RobotState state){
+        currentState = state;
     }
 
-    public RobotState setCurrentRobotStateStatic(RobotState pos){
-        // this.intake.goToPos(pos);
-        this.arm.goToStaticPosCommand(pos);
-        // this.endEffector.goToPos(pos);
+    private void setWantedRobotState(RobotState state){
+        wantedState = state;
     }
+
 
     public RobotState getWantedState(){
         return wantedState;
@@ -62,13 +61,88 @@ public class Superstructure {
         return currentState;
     }
 
-    public static Superstructure getInstance(){
-        if(instance == null) return instance = new Superstructure();
-        return instance;
-    }
-
     public void initializeBot(){
         this.arm.zeroArmCommand();
-        
+    }
+    
+    public Command goToIntakeCellCommand(){
+        return new FunctionalCommand(
+            () -> this.setWantedRobotState(RobotState.INTAKING_CELL),
+            () -> arm.goToStaticPosCommand(RobotState.INTAKING_CELL),
+            (interrupted) -> this.setCurrentRobotState(RobotState.INTAKING_CELL),
+            () -> {
+                return arm.atWantedArmPosStatic();
+            }
+        );
+    }
+
+    public Command goToIntakeShellCommand(){
+        return new FunctionalCommand(
+            () -> this.setWantedRobotState(RobotState.INTAKING_SHELL),
+            () -> arm.goToStaticPosCommand(RobotState.INTAKING_SHELL),
+            (interrupted) -> this.setCurrentRobotState(RobotState.INTAKING_SHELL),
+            () -> {
+                return arm.atWantedArmPosStatic();
+            }
+        );
+    }
+
+    public Command goToSourceShellCommand(){
+        return new FunctionalCommand(
+            () -> this.setWantedRobotState(RobotState.SOURCE_SHELL),
+            () -> arm.goToStaticPosCommand(RobotState.SOURCE_SHELL),
+            (interrupted) -> this.setCurrentRobotState(RobotState.SOURCE_SHELL),
+            () -> {
+                return arm.atWantedArmPosStatic();
+            }
+        );
+    }
+
+    public Command goToSourceCellCommand(){
+        return new FunctionalCommand(
+            () -> this.setWantedRobotState(RobotState.SOURCE_CELL),
+            () -> arm.goToStaticPosCommand(RobotState.SOURCE_CELL),
+            (interrupted) -> this.setCurrentRobotState(RobotState.SOURCE_CELL),
+            () -> {
+                return arm.atWantedArmPosStatic();
+            }
+        );
+    }
+
+    public Command goToShelfCommand(){
+        return new FunctionalCommand(
+            () -> this.setWantedRobotState(RobotState.SHELF),
+            () -> arm.goToStaticPosCommand(RobotState.SHELF),
+            (interrupted) -> this.setCurrentRobotState(RobotState.SHELF),
+            () -> {
+                return arm.atWantedArmPosStatic();
+            }
+        );
+    }
+
+    public Command goToStowCommand(){
+        return new FunctionalCommand(
+            () -> this.setWantedRobotState(RobotState.STOW),
+            () -> arm.goToStaticPosCommand(RobotState.STOW),
+            (interrupted) -> this.setCurrentRobotState(RobotState.STOW),
+            () -> {
+                return arm.atWantedArmPosStatic();
+            }
+        );
+    }
+    
+    public Command idleCommand(){
+        return Commands.sequence(
+            Commands.runOnce(() -> this.setWantedRobotState(RobotState.IDLE)),
+            Commands.runOnce(() -> arm.stopArmCommand(), arm),
+            Commands.runOnce(() -> endEffector.stopEndEffectorCommand(), endEffector),
+            Commands.runOnce(() -> intake.stopIntakeCommand(), intake),
+            Commands.runOnce(() -> this.setCurrentRobotState(RobotState.IDLE))
+        );
+    }
+
+    public static Superstructure getInstance(){
+        if(instance == null) instance = new Superstructure();
+        return instance;
     }
 }

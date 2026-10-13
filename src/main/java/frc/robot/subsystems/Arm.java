@@ -37,11 +37,13 @@ import frc.robot.subsystems.constants.*;
 public class Arm extends SubsystemBase{
     private static Arm instance = null;
 
-    private final Superstructure  superstructure= new Superstructure();
+    private final Superstructure superstructure= new Superstructure();
 
     private final RedRockTalon pivotMotor = new RedRockTalon(0, "Arm/pivot-motor", "*");
     private final CANcoder encoder = new CANcoder(0, "*");
 
+
+    //CANCoder values
     private SmartDashboardNumber kRotorToSensorRatio = new SmartDashboardNumber("Arm/CANCoder/k-rotor-to-sensor-ratio", 0); //TODO
     private SmartDashboardNumber kSensorToMechRatio = new SmartDashboardNumber("Arm/CANCoder/k-sensor-to-mech-ratio", 0); //TODO
     private SmartDashboardNumber kDiscontinuityPoint = new SmartDashboardNumber("Arm/CANCoder/k-discontinuity-point", 0.5); //TODO gives range of rotation, so 0.7 would be -0.3, 0.7, 1 would be 0, 1 etc
@@ -52,20 +54,23 @@ public class Arm extends SubsystemBase{
     private SmartDashboardNumber l2ArmPos = new SmartDashboardNumber("Arm/Positions/L2", 0); //TODO
     private SmartDashboardNumber l3ArmPos = new SmartDashboardNumber("Arm/Positions/L3", 0); //TODO
     
+    //Static locations
     private SmartDashboardNumber shelfArmPos = new SmartDashboardNumber("Arm/Positions/shelf", 0); //TODO
-    private SmartDashboardNumber intakingArmPos = new SmartDashboardNumber("Arm/Positions/intaking", 0); //TODO
     private SmartDashboardNumber sourceShellArmPos = new SmartDashboardNumber("Arm/Positions/source-shell", 0); //TODO
     private SmartDashboardNumber sourceCellArmPos = new SmartDashboardNumber("Arm/Positions/source-cell", 0); //TODO
     private SmartDashboardNumber stowArmPos = new SmartDashboardNumber("Arm/Positions/stow", 0); //TODO
     private SmartDashboardNumber stoppedArmPos = new SmartDashboardNumber("Arm/Positions/stopped", 0); //TODO
+
+    //Limits and Thresholds
     private SmartDashboardNumber minArmPos = new SmartDashboardNumber("Arm/Positions/min", 0); //TODO
     private SmartDashboardNumber maxArmPos = new SmartDashboardNumber("Arm/Positions/max", 0); //TODO
     private SmartDashboardNumber armTolerance = new SmartDashboardNumber("Arm/Tolerance", 0); //TODO //In rotations
+    private SmartDashboardNumber currentLimit = new SmartDashboardNumber("Arm/current-limit", 45);
     
+    //Testing
     private SmartDashboardNumber testPos = new SmartDashboardNumber("Arm/test-pos", 0);
     private SmartDashboardNumber testPosChangeAmount = new SmartDashboardNumber("Arm/test-pos-change-amount", 1); 
     
-    private SmartDashboardNumber currentLimit = new SmartDashboardNumber("Arm/current-limit", 45);
     public Arm(){
         super("Arm");
 
@@ -116,6 +121,12 @@ public class Arm extends SubsystemBase{
         this.pivotMotor.motor.getConfigurator().apply(feedbackConfigs);
     }
     
+    
+    //Movement Methods
+    private void stopArm(){
+        this.pivotMotor.motor.setControl(new VoltageOut(0));
+    }
+
     private void normalizeArm(){
         this.pivotMotor.motor.set(0.1);
     }
@@ -125,6 +136,12 @@ public class Arm extends SubsystemBase{
         this.encoder.setPosition(0);
     }
 
+    private void armToPos(double pos){
+        this.pivotMotor.setMotionMagicPosition(MathUtil.clamp(pos, minArmPos.getNumber(), maxArmPos.getNumber()));
+    }
+
+
+    //Testing
     private void increaseTestPos(double amount){
         this.testPos.putNumber(this.testPos.getNumber() + amount);
     }
@@ -133,17 +150,23 @@ public class Arm extends SubsystemBase{
         this.testPos.putNumber(this.testPos.getNumber() - amount);
     }
 
-    private void armToPos(double pos){
-        this.pivotMotor.setMotionMagicPosition(MathUtil.clamp(pos, minArmPos.getNumber(), maxArmPos.getNumber()));
-    }
 
+    //Other Methods
     public boolean atWantedArmPos(double dist){
         return Math.abs(
             this.pivotMotor.motor.getPosition().getValueAsDouble() - 
             stateToArmPos(superstructure.getWantedState(), dist)
-        ) > armTolerance.getNumber();
+        ) <= armTolerance.getNumber();
+    }
+    
+    public boolean atWantedArmPosStatic(){
+        return Math.abs(
+            this.pivotMotor.motor.getPosition().getValueAsDouble() - 
+            stateToArmPosStatic(superstructure.getWantedState())
+        ) <= armTolerance.getNumber();
     }
 
+    //Superstructure Methods
     //static arm pos for not lerping l1, l2, l3
     private double stateToArmPosStatic(Superstructure.RobotState state){
         switch(state){
@@ -154,16 +177,16 @@ public class Arm extends SubsystemBase{
             case L3:
                 return this.l3ArmPos.getNumber();
             case INTAKING_CELL:
-                return this.intakingArmPos.getNumber();
+                return this.sourceCellArmPos.getNumber();
             case INTAKING_SHELL:
-                return this.intakingArmPos.getNumber();
+                return this.sourceShellArmPos.getNumber();
             case SOURCE_CELL:
                 return this.sourceCellArmPos.getNumber();
             case SOURCE_SHELL:
                 return this.sourceShellArmPos.getNumber();
             case SHELF:
                 return this.shelfArmPos.getNumber();
-            case STOPPED:
+            case IDLE:
                 return this.stoppedArmPos.getNumber();
             case STOW:
                 return this.stowArmPos.getNumber();
@@ -181,24 +204,26 @@ public class Arm extends SubsystemBase{
             case L3:
                 return LERPTables.l3ArmPosLerpTable.get(dist);
             case INTAKING_CELL:
-                return this.intakingArmPos.getNumber();
+                return this.sourceCellArmPos.getNumber();
             case INTAKING_SHELL:
-                return this.intakingArmPos.getNumber();
+                return this.sourceShellArmPos.getNumber();
             case SOURCE_CELL:
                 return this.sourceCellArmPos.getNumber();
             case SOURCE_SHELL:
                 return this.sourceShellArmPos.getNumber();
             case SHELF:
                 return this.shelfArmPos.getNumber();
-            case STOPPED:
-                return this.stoppedArmPos.getNumber();
             case STOW:
                 return this.stowArmPos.getNumber();
+            case IDLE:
+                return this.stoppedArmPos.getNumber();
             default:
                 return 0.0;
         }
     }     
 
+
+    //Commands
     public Command goToPosCommand(Superstructure.RobotState pos, double dist){
         return Commands.runOnce(
             () -> armToPos(stateToArmPos(superstructure.getWantedState(), dist)), this
@@ -211,6 +236,20 @@ public class Arm extends SubsystemBase{
         );
     }
 
+
+    public Command zeroArmCommand(){
+        return new FunctionalCommand(
+            () -> this.normalizeArm(),
+            () -> {},
+            (interrupted) -> this.resetArm(),
+            () -> {
+                return this.pivotMotor.motor.getSupplyCurrent().getValueAsDouble() > this.currentLimit.getNumber();
+            }
+        );
+    }
+
+
+    //Testing
     public Command goToTestPosCommand(){
         return Commands.runOnce(
             () -> armToPos(testPos.getNumber()), 
@@ -232,14 +271,10 @@ public class Arm extends SubsystemBase{
         );
     }
 
-    public Command zeroArmCommand(){
-        return new FunctionalCommand(
-            () -> this.normalizeArm(),
-            () -> {},
-            (interrupted) -> this.resetArm(),
-            () -> {
-                return this.pivotMotor.motor.getSupplyCurrent().getValueAsDouble() > this.currentLimit.getNumber();
-            }
+    public Command stopArmCommand(){
+        return Commands.runOnce(
+            () -> this.stopArm(), 
+            this
         );
     }
 
