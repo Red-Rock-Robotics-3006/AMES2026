@@ -8,13 +8,15 @@ import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LED;
+import frc.robot.subsystems.constants.LERPTables;
+import redrocklib.logging.SmartDashboardNumber;
 
 public class Superstructure {
     private static Superstructure instance = null;
 
-    private Intake intake = Intake.getInstance();
-    private EndEffector endEffector = EndEffector.getInstance();
-    private Arm arm = Arm.getInstance();
+    private RobotState wantedState = RobotState.IDLE;
+    private RobotState currentState = RobotState.IDLE;
+    
     // private LED led = LED.getInstance();
     // private Elevator elevator = Elevator.getInstance();
 
@@ -31,19 +33,165 @@ public class Superstructure {
         STOW,
     }
 
-/* For auto align
-    public static enum FieldPos{
-        LEFT,
-        LEFTMID,
-        RIGHT,
-        RIGHTMID
+    //Subsystem integration
+        //ARM
+            private Arm arm = Arm.getInstance();
+
+            //LERP disable poses
+            private SmartDashboardNumber l1ArmPos = new SmartDashboardNumber("Arm/Positions/L1", 0); //TODO
+            private SmartDashboardNumber l2ArmPos = new SmartDashboardNumber("Arm/Positions/L2", 0); //TODO
+            private SmartDashboardNumber l3ArmPos = new SmartDashboardNumber("Arm/Positions/L3", 0); //TODO
+            
+            //Static arm locations
+            private SmartDashboardNumber shelfArmPos = new SmartDashboardNumber("Arm/Positions/shelf", 0); //TODO
+            private SmartDashboardNumber sourceShellArmPos = new SmartDashboardNumber("Arm/Positions/source-shell", 0); //TODO
+            private SmartDashboardNumber sourceCellArmPos = new SmartDashboardNumber("Arm/Positions/source-cell", 0); //TODO
+            private SmartDashboardNumber stowArmPos = new SmartDashboardNumber("Arm/Positions/stow", 0); //TODO
+            private SmartDashboardNumber stoppedArmPos = new SmartDashboardNumber("Arm/Positions/stopped", 0); //TODO
+
+        //EndEffector
+            private EndEffector endEffector = EndEffector.getInstance();
+
+            //Static Velocities
+            SmartDashboardNumber intakingVel = new SmartDashboardNumber("EndEffector/intakingVel", -1200);
+            SmartDashboardNumber intakingCellVel = new SmartDashboardNumber("EndEffector/intakingCellVel", 0);//TODO
+            SmartDashboardNumber intakingShellVel = new SmartDashboardNumber("EndEffector/intakingShellVel", 0);//TODO
+            SmartDashboardNumber scoreShelfVel = new SmartDashboardNumber("EndEffector/scoreShelfVel", 0);//TODO
+            SmartDashboardNumber intakeCellSourceVel = new SmartDashboardNumber("EndEffector/intakeCellSourceVel", 0);//TODO
+            SmartDashboardNumber intakeShellSourceVel = new SmartDashboardNumber("EndEffector/intakeShellSourceVel", 0);//TODO
+
+
+            //LERP disable velocities
+            SmartDashboardNumber staticL1Vel = new SmartDashboardNumber("EndEffector/staticL1Vel", 0);//TODO
+            SmartDashboardNumber staticL2Vel = new SmartDashboardNumber("EndEffector/staticL2Vel", 0);//TODO
+            SmartDashboardNumber staticL3Vel = new SmartDashboardNumber("EndEffector/staticL3Vel", 0);//TODO
+
+        //Intake
+            private Intake intake = Intake.getInstance();
+
+    //Subsystem integration end
+
+    /* For auto align
+        public static enum FieldPos{
+            LEFT,
+            LEFTMID,
+            RIGHT,
+            RIGHTMID
+        }
+    */
+
+    //Statemachine to subsystem comms
+    //Arm
+    private double stateToArmPos(Superstructure.RobotState state, double dist){
+        switch(state){
+            case L1:
+                return LERPTables.l1ArmPosLerpTable.get(dist);
+            case L2:
+                return LERPTables.l2ArmPosLerpTable.get(dist);
+            case L3:
+                return LERPTables.l3ArmPosLerpTable.get(dist);
+            case INTAKING_CELL:
+                return this.sourceCellArmPos.getNumber();
+            case INTAKING_SHELL:
+                return this.sourceShellArmPos.getNumber();
+            case SOURCE_CELL:
+                return this.sourceCellArmPos.getNumber();
+            case SOURCE_SHELL:
+                return this.sourceShellArmPos.getNumber();
+            case SHELF:
+                return this.shelfArmPos.getNumber();
+            case STOW:
+                return this.stowArmPos.getNumber();
+            case IDLE:
+                return this.stoppedArmPos.getNumber();
+            default:
+                return 0.0;
+        }
+    }    
+
+    private double stateToArmPosStatic(Superstructure.RobotState state){
+        switch(state){
+            case L1:
+                return this.l1ArmPos.getNumber();
+            case L2:
+                return this.l2ArmPos.getNumber();
+            case L3:
+                return this.l3ArmPos.getNumber();
+            case INTAKING_CELL:
+                return this.sourceCellArmPos.getNumber();
+            case INTAKING_SHELL:
+                return this.sourceShellArmPos.getNumber();
+            case SOURCE_CELL:
+                return this.sourceCellArmPos.getNumber();
+            case SOURCE_SHELL:
+                return this.sourceShellArmPos.getNumber();
+            case SHELF:
+                return this.shelfArmPos.getNumber();
+            case IDLE:
+                return this.stoppedArmPos.getNumber();
+            case STOW:
+                return this.stowArmPos.getNumber();
+            default:
+                return 0.0;
+        }
     }
-*/
+
+    //EndEffector
+    private double stateToVelocity(Superstructure.RobotState state, double dist){
+        switch(state){
+            case L1:
+                return LERPTables.l1RPMLerpTable.get(dist);
+            case L2:
+                return LERPTables.l2RPMLerpTable.get(dist);
+            case L3:
+                return LERPTables.l2RPMLerpTable.get(dist);
+            case INTAKING_CELL:
+                return this.intakingCellVel.getNumber();
+            case INTAKING_SHELL:
+                return this.intakingShellVel.getNumber();
+            case SOURCE_CELL:
+                return this.intakeCellSourceVel.getNumber();
+            case SOURCE_SHELL:
+                return this.intakeShellSourceVel.getNumber();
+            case SHELF:
+                return this.scoreShelfVel.getNumber();
+            case IDLE:
+                return 0;
+            case STOW:
+                return 0;
+            default:
+                return 0.0;
+        }
+    }
+    private double stateToVelocitySTATIC(Superstructure.RobotState state){
+        switch(state){
+            case L1:
+                return this.staticL1Vel.getNumber();
+            case L2: 
+                return this.staticL1Vel.getNumber();
+            case L3:
+                return this.staticL3Vel.getNumber();
+            case INTAKING_CELL:
+                return this.intakingCellVel.getNumber();
+            case INTAKING_SHELL:
+                return this.intakingShellVel.getNumber();
+            case SOURCE_CELL:
+                return this.intakeCellSourceVel.getNumber();
+            case SOURCE_SHELL:
+                return this.intakeShellSourceVel.getNumber();
+            case SHELF:
+                return this.scoreShelfVel.getNumber();
+            case IDLE:
+                return 0;
+            case STOW:
+                return 0;
+            default:
+                return 0.0;
+        }
+    }
 
 
-    private RobotState wantedState = RobotState.IDLE;
-    private RobotState currentState = RobotState.IDLE;
-
+    //Superstructure-specific commands
     private void setCurrentRobotState(RobotState state){
         currentState = state;
     }
@@ -65,78 +213,50 @@ public class Superstructure {
         this.arm.zeroArmCommand();
     }
     
-    public Command goToIntakeCellCommand(){
-        return new FunctionalCommand(
-            () -> this.setWantedRobotState(RobotState.INTAKING_CELL),
-            () -> arm.goToStaticPosCommand(RobotState.INTAKING_CELL),
-            (interrupted) -> this.setCurrentRobotState(RobotState.INTAKING_CELL),
+    //Arm commands
+    public Command goToArmPosStaticCommand(RobotState state){
+        return new FunctionalCommand( 
+            () -> this.setWantedRobotState(state),
+            () -> arm.goToStaticPosCommand(this.stateToArmPosStatic(wantedState)),
+            (interrupted) -> this.setCurrentRobotState(state),
             () -> {
-                return arm.atWantedArmPosStatic();
+                return arm.atWantedArmPos(this.stateToArmPosStatic(wantedState));
             }
         );
     }
 
     public Command goToIntakeShellCommand(){
-        return new FunctionalCommand(
-            () -> this.setWantedRobotState(RobotState.INTAKING_SHELL),
-            () -> arm.goToStaticPosCommand(RobotState.INTAKING_SHELL),
-            (interrupted) -> this.setCurrentRobotState(RobotState.INTAKING_SHELL),
-            () -> {
-                return arm.atWantedArmPosStatic();
-            }
-        );
-    }
-
-    public Command goToSourceShellCommand(){
-        return new FunctionalCommand(
-            () -> this.setWantedRobotState(RobotState.SOURCE_SHELL),
-            () -> arm.goToStaticPosCommand(RobotState.SOURCE_SHELL),
-            (interrupted) -> this.setCurrentRobotState(RobotState.SOURCE_SHELL),
-            () -> {
-                return arm.atWantedArmPosStatic();
-            }
-        );
-    }
-
-    public Command goToSourceCellCommand(){
-        return new FunctionalCommand(
-            () -> this.setWantedRobotState(RobotState.SOURCE_CELL),
-            () -> arm.goToStaticPosCommand(RobotState.SOURCE_CELL),
-            (interrupted) -> this.setCurrentRobotState(RobotState.SOURCE_CELL),
-            () -> {
-                return arm.atWantedArmPosStatic();
-            }
-        );
-    }
-
-    public Command goToShelfCommand(){
-        return new FunctionalCommand(
-            () -> this.setWantedRobotState(RobotState.SHELF),
-            () -> arm.goToStaticPosCommand(RobotState.SHELF),
-            (interrupted) -> this.setCurrentRobotState(RobotState.SHELF),
-            () -> {
-                return arm.atWantedArmPosStatic();
-            }
-        );
-    }
-
-    public Command goToStowCommand(){
-        return new FunctionalCommand(
-            () -> this.setWantedRobotState(RobotState.STOW),
-            () -> arm.goToStaticPosCommand(RobotState.STOW),
-            (interrupted) -> this.setCurrentRobotState(RobotState.STOW),
-            () -> {
-                return arm.atWantedArmPosStatic();
-            }
-        );
+        return goToArmPosStaticCommand(RobotState.INTAKING_SHELL);
     }
     
+    public Command goToIntakeCellCommand(){
+        return goToArmPosStaticCommand(RobotState.INTAKING_CELL);
+    }
+    
+    public Command goToSourceShellCommand(){
+        return goToArmPosStaticCommand(RobotState.SOURCE_SHELL);
+    }
+    
+    public Command goToSourceCellCommand(){
+        return goToArmPosStaticCommand(RobotState.INTAKING_CELL);
+    }
+    
+    public Command goToShelfCommand(){
+        return goToArmPosStaticCommand(RobotState.SHELF);
+    }
+    
+    public Command goToStowCommand(){
+        return goToArmPosStaticCommand(RobotState.STOW);
+    }
+    
+
+
     public Command idleCommand(){
         return Commands.sequence(
             Commands.runOnce(() -> this.setWantedRobotState(RobotState.IDLE)),
             Commands.runOnce(() -> arm.stopArmCommand(), arm),
             Commands.runOnce(() -> endEffector.stopEndEffectorCommand(), endEffector),
-            Commands.runOnce(() -> intake.stopIntakeCommand(), intake),
+            // Commands.runOnce(() -> intake.stopIntakeCommand(), intake),
             Commands.runOnce(() -> this.setCurrentRobotState(RobotState.IDLE))
         );
     }

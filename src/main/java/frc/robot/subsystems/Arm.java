@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import java.util.Map;
-
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
@@ -9,30 +7,23 @@ import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.Led1OffColorValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Robot;
 import frc.robot.Superstructure;
-import frc.robot.subsystems.constants.LERPTables;
 import redrocklib.logging.SmartDashboardNumber;
 import redrocklib.wrappers.RedRockTalon;
-import frc.robot.subsystems.constants.*;
 
 public class Arm extends SubsystemBase{
     private static Arm instance = null;
@@ -48,18 +39,6 @@ public class Arm extends SubsystemBase{
     private SmartDashboardNumber kSensorToMechRatio = new SmartDashboardNumber("Arm/CANCoder/k-sensor-to-mech-ratio", 0); //TODO
     private SmartDashboardNumber kDiscontinuityPoint = new SmartDashboardNumber("Arm/CANCoder/k-discontinuity-point", 0.5); //TODO gives range of rotation, so 0.7 would be -0.3, 0.7, 1 would be 0, 1 etc
     private SmartDashboardNumber kCANCoderOffset = new SmartDashboardNumber("Arm/CANCoder/k-cancoder-offset", 0); //TODO gives range of rotation, so 0.7 would be -0.3, 0.7, 1 would be 0, 1 etc
-
-    //Static arm poses
-    private SmartDashboardNumber l1ArmPos = new SmartDashboardNumber("Arm/Positions/L1", 0); //TODO
-    private SmartDashboardNumber l2ArmPos = new SmartDashboardNumber("Arm/Positions/L2", 0); //TODO
-    private SmartDashboardNumber l3ArmPos = new SmartDashboardNumber("Arm/Positions/L3", 0); //TODO
-    
-    //Static locations
-    private SmartDashboardNumber shelfArmPos = new SmartDashboardNumber("Arm/Positions/shelf", 0); //TODO
-    private SmartDashboardNumber sourceShellArmPos = new SmartDashboardNumber("Arm/Positions/source-shell", 0); //TODO
-    private SmartDashboardNumber sourceCellArmPos = new SmartDashboardNumber("Arm/Positions/source-cell", 0); //TODO
-    private SmartDashboardNumber stowArmPos = new SmartDashboardNumber("Arm/Positions/stow", 0); //TODO
-    private SmartDashboardNumber stoppedArmPos = new SmartDashboardNumber("Arm/Positions/stopped", 0); //TODO
 
     //Limits and Thresholds
     private SmartDashboardNumber minArmPos = new SmartDashboardNumber("Arm/Positions/min", 0); //TODO
@@ -152,87 +131,25 @@ public class Arm extends SubsystemBase{
 
 
     //Other Methods
-    public boolean atWantedArmPos(double dist){
+    public boolean atWantedArmPos(double pos){ 
         return Math.abs(
             this.pivotMotor.motor.getPosition().getValueAsDouble() - 
-            stateToArmPos(superstructure.getWantedState(), dist)
+            pos
         ) <= armTolerance.getNumber();
     }
-    
-    public boolean atWantedArmPosStatic(){
-        return Math.abs(
-            this.pivotMotor.motor.getPosition().getValueAsDouble() - 
-            stateToArmPosStatic(superstructure.getWantedState())
-        ) <= armTolerance.getNumber();
-    }
-
-    //Superstructure Methods
-    //static arm pos for not lerping l1, l2, l3
-    private double stateToArmPosStatic(Superstructure.RobotState state){
-        switch(state){
-            case L1:
-                return this.l1ArmPos.getNumber();
-            case L2:
-                return this.l2ArmPos.getNumber();
-            case L3:
-                return this.l3ArmPos.getNumber();
-            case INTAKING_CELL:
-                return this.sourceCellArmPos.getNumber();
-            case INTAKING_SHELL:
-                return this.sourceShellArmPos.getNumber();
-            case SOURCE_CELL:
-                return this.sourceCellArmPos.getNumber();
-            case SOURCE_SHELL:
-                return this.sourceShellArmPos.getNumber();
-            case SHELF:
-                return this.shelfArmPos.getNumber();
-            case IDLE:
-                return this.stoppedArmPos.getNumber();
-            case STOW:
-                return this.stowArmPos.getNumber();
-            default:
-                return 0.0;
-        }
-    }     
-
-    private double stateToArmPos(Superstructure.RobotState state, double dist){
-        switch(state){
-            case L1:
-                return LERPTables.l1ArmPosLerpTable.get(dist);
-            case L2:
-                return LERPTables.l2ArmPosLerpTable.get(dist);
-            case L3:
-                return LERPTables.l3ArmPosLerpTable.get(dist);
-            case INTAKING_CELL:
-                return this.sourceCellArmPos.getNumber();
-            case INTAKING_SHELL:
-                return this.sourceShellArmPos.getNumber();
-            case SOURCE_CELL:
-                return this.sourceCellArmPos.getNumber();
-            case SOURCE_SHELL:
-                return this.sourceShellArmPos.getNumber();
-            case SHELF:
-                return this.shelfArmPos.getNumber();
-            case STOW:
-                return this.stowArmPos.getNumber();
-            case IDLE:
-                return this.stoppedArmPos.getNumber();
-            default:
-                return 0.0;
-        }
-    }     
-
 
     //Commands
-    public Command goToPosCommand(Superstructure.RobotState pos, double dist){
+    public Command goToPosCommand(double pos, double dist){
         return Commands.runOnce(
-            () -> armToPos(stateToArmPos(superstructure.getWantedState(), dist)), this
+            () -> armToPos(pos), 
+            this
         );
     }
 
-    public Command goToStaticPosCommand(Superstructure.RobotState pos){
+    public Command goToStaticPosCommand(double pos){// I changed the end effector intake command to a new version called intakeCommand, it takes in a velocity. will implement in the superstructure
         return Commands.runOnce(
-            () -> armToPos(stateToArmPosStatic(superstructure.getWantedState())), this
+            () -> armToPos(pos), 
+            this
         );
     }
 
