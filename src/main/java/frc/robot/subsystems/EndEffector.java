@@ -8,34 +8,26 @@ import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.smartdashboard.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import redrocklib.logging.SmartDashboardNumber;
 import redrocklib.wrappers.RedRockTalon;
 import frc.robot.Superstructure;
-import frc.robot.subsystems.constants.LERPTables;
 
 public class EndEffector extends SubsystemBase{
     private static EndEffector instance = null;
 
+    private final Superstructure superstructure = new Superstructure();
+
     private final RedRockTalon endEffectMotor = new RedRockTalon(0, "EndEffector/endEffectMotor"); //TODO
 
-    //Constants
-    SmartDashboardNumber intakingVel = new SmartDashboardNumber("EndEffector/intakingVel", 0);
-    SmartDashboardNumber intakingCellVel = new SmartDashboardNumber("EndEffector/intakingCellVel", 0);
-    SmartDashboardNumber intakingShellVel = new SmartDashboardNumber("EndEffector/intakingShellVel", 0);
-    SmartDashboardNumber scoreShelfVel = new SmartDashboardNumber("EndEffector/scoreShelfVel", 0);
-    SmartDashboardNumber intakeCellSourceVel = new SmartDashboardNumber("EndEffector/intakeCellSourceVel", 0);
-    SmartDashboardNumber intakeShellSourceVel = new SmartDashboardNumber("EndEffector/intakeShellSourceVel", 0);
-
-    //LERP disabled values
-    SmartDashboardNumber staticL1Vel = new SmartDashboardNumber("EndEffector/staticL1Vel", 0);
-    SmartDashboardNumber staticL2Vel = new SmartDashboardNumber("EndEffector/staticL2Vel", 0);
-    SmartDashboardNumber staticL3Vel = new SmartDashboardNumber("EndEffector/staticL3Vel", 0);
-
+    //Thresholds and Limits
     SmartDashboardNumber velocityThreshold = new SmartDashboardNumber("EndEffector/velocityThreshold", 4);
+
+    private SmartDashboardNumber currentLimit = new SmartDashboardNumber("EndEffector/current-limit", 45);
 
     public EndEffector(){
         this.endEffectMotor.withMotorOutputConfigs(
@@ -70,6 +62,8 @@ public class EndEffector extends SubsystemBase{
         ).withTuningEnabled(true);
     }
 
+
+    //Movement methods
     private void setSpeed(double velocity){
         endEffectMotor.setMotionMagicVelocity(velocity);
     }
@@ -78,75 +72,61 @@ public class EndEffector extends SubsystemBase{
         endEffectMotor.motor.setControl(new CoastOut());
     }
 
-    public boolean atWantedVelocity(double dist){
+
+    //Other Methods
+    public boolean atWantedVelocity(double velocity){
         return Math.abs(
             this.endEffectMotor.motor.getVelocity().getValueAsDouble()*60 - 
-            this.stateToVelocity(Superstructure.getInstance().getWantedState(), dist)
+            velocity
         ) <= this.velocityThreshold.getNumber();
     }
 
-    private double stateToVelocity(Superstructure.RobotState state, double dist){
-        switch(state){
-            case L1:
-                return LERPTables.l1RPMLerpTable.get(dist);
-            case L2:
-                return LERPTables.l2RPMLerpTable.get(dist);
-            case L3:
-                return LERPTables.l2RPMLerpTable.get(dist);
-            case INTAKING_CELL:
-                return this.intakingCellVel.getNumber();
-            case INTAKING_SHELL:
-                return this.intakingShellVel.getNumber();
-            case SOURCE_CELL:
-                return this.intakeCellSourceVel.getNumber();
-            case SOURCE_SHELL:
-                return this.intakeShellSourceVel.getNumber();
-            case SHELF:
-                return this.scoreShelfVel.getNumber();
-            case STOPPED:
-                return 0;
-            case STOW:
-                return 0;
-            default:
-                return 0.0;
-        }
-    }
-    private double stateToVelocitySTATIC(Superstructure.RobotState state){
-        switch(state){
-            case L1:
-                return this.staticL1Vel.getNumber();
-            case L2: 
-                return this.staticL1Vel.getNumber();
-            case L3:
-                return this.staticL3Vel.getNumber();
-            case INTAKING_CELL:
-                return this.intakingCellVel.getNumber();
-            case INTAKING_SHELL:
-                return this.intakingShellVel.getNumber();
-            case SOURCE_CELL:
-                return this.intakeCellSourceVel.getNumber();
-            case SOURCE_SHELL:
-                return this.intakeShellSourceVel.getNumber();
-            case SHELF:
-                return this.scoreShelfVel.getNumber();
-            case STOPPED:
-                return 0;
-            case STOW:
-                return 0;
-            default:
-                return 0.0;
-        }
-    }
     
-    public Command intakeElemantCommand(){
-        return Commands.sequence(
-            Commands.runOnce(() -> , null)
+    //Commands
+    public Command shootCommand(double velocity){
+        return Commands.runOnce(
+            () -> this.setSpeed(velocity), this
         );
     }
+    
+    public Command stopEndEffectorCommand(){
+        return Commands.runOnce(
+            () -> this.stop(), 
+            this
+        );
+    }
+
+    public Command ejectPieceCommand(){
+        return Commands.runOnce(
+            () -> this.setSpeed(-500), this
+        );
+    }
+    
+
+    public Command intakeCommand(double velocity){
+        return new FunctionalCommand(
+            () -> this.setSpeed(velocity), 
+            () -> {}, 
+            (interrupted) -> this.stop(), 
+            () -> {
+                return this.endEffectMotor.motor.getSupplyCurrent().getValueAsDouble() > this.currentLimit.getNumber();
+            }, 
+            this
+        );
+    }
+
+
     
     @Override
     public void periodic(){
         this.endEffectMotor.update();
+
+        
+        SmartDashboard.putBoolean("EndEffector/at-wanted-velocity", this.atWantedVelocity(0)); //TODO add distance from peg board when have odometry
+    
+        SmartDashboard.putNumber("EndEffector/supply-current", this.endEffectMotor.motor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("EndEffector/velocity", this.endEffectMotor.motor.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("EndEffector/acceleration", this.endEffectMotor.motor.getAcceleration().getValueAsDouble());
     }
 
     public static EndEffector getInstance(){
