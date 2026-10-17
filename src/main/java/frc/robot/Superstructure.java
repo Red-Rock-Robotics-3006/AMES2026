@@ -14,12 +14,6 @@ import redrocklib.logging.SmartDashboardNumber;
 public class Superstructure {
     private static Superstructure instance = null;
 
-    private RobotState wantedState = RobotState.IDLE;
-    private RobotState currentState = RobotState.IDLE;
-    
-    // private LED led = LED.getInstance();
-    // private Elevator elevator = Elevator.getInstance();
-
     public static enum RobotState{
         L1,
         L2,
@@ -33,44 +27,6 @@ public class Superstructure {
         STOW,
     }
 
-    //Subsystem integration
-        //ARM
-            private Arm arm = Arm.getInstance();
-
-            //LERP disable poses
-            private SmartDashboardNumber l1ArmPos = new SmartDashboardNumber("Arm/Positions/L1", 0); //TODO
-            private SmartDashboardNumber l2ArmPos = new SmartDashboardNumber("Arm/Positions/L2", 0); //TODO
-            private SmartDashboardNumber l3ArmPos = new SmartDashboardNumber("Arm/Positions/L3", 0); //TODO
-            
-            //Static arm locations
-            private SmartDashboardNumber shelfArmPos = new SmartDashboardNumber("Arm/Positions/shelf", 0); //TODO
-            private SmartDashboardNumber sourceShellArmPos = new SmartDashboardNumber("Arm/Positions/source-shell", 0); //TODO
-            private SmartDashboardNumber sourceCellArmPos = new SmartDashboardNumber("Arm/Positions/source-cell", 0); //TODO
-            private SmartDashboardNumber stowArmPos = new SmartDashboardNumber("Arm/Positions/stow", 0); //TODO
-            private SmartDashboardNumber stoppedArmPos = new SmartDashboardNumber("Arm/Positions/stopped", 0); //TODO
-
-        //EndEffector
-            private EndEffector endEffector = EndEffector.getInstance();
-
-            //Static Velocities
-            SmartDashboardNumber intakingVel = new SmartDashboardNumber("EndEffector/intakingVel", -1200);
-            SmartDashboardNumber intakingCellVel = new SmartDashboardNumber("EndEffector/intakingCellVel", 0);//TODO
-            SmartDashboardNumber intakingShellVel = new SmartDashboardNumber("EndEffector/intakingShellVel", 0);//TODO
-            SmartDashboardNumber scoreShelfVel = new SmartDashboardNumber("EndEffector/scoreShelfVel", 0);//TODO
-            SmartDashboardNumber intakeCellSourceVel = new SmartDashboardNumber("EndEffector/intakeCellSourceVel", 0);//TODO
-            SmartDashboardNumber intakeShellSourceVel = new SmartDashboardNumber("EndEffector/intakeShellSourceVel", 0);//TODO
-
-
-            //LERP disable velocities
-            SmartDashboardNumber staticL1Vel = new SmartDashboardNumber("EndEffector/staticL1Vel", 0);//TODO
-            SmartDashboardNumber staticL2Vel = new SmartDashboardNumber("EndEffector/staticL2Vel", 0);//TODO
-            SmartDashboardNumber staticL3Vel = new SmartDashboardNumber("EndEffector/staticL3Vel", 0);//TODO
-
-        //Intake
-            private Intake intake = Intake.getInstance();
-
-    //Subsystem integration end
-
     /* For auto align
         public static enum FieldPos{
             LEFT,
@@ -79,6 +35,47 @@ public class Superstructure {
             RIGHTMID
         }
     */
+    
+    private RobotState wantedState = RobotState.IDLE;
+    private RobotState currentState = RobotState.IDLE;
+    
+    private EndEffector endEffector = EndEffector.getInstance();
+    private Arm arm = Arm.getInstance();
+    private Intake intake = Intake.getInstance();
+    // private LED led = LED.getInstance();
+    // private Elevator elevator = Elevator.getInstance();
+
+    //ARM
+
+    //LERP disable poses
+    private SmartDashboardNumber l1ArmPos = new SmartDashboardNumber("Arm/Positions/L1", 0); //TODO
+    private SmartDashboardNumber l2ArmPos = new SmartDashboardNumber("Arm/Positions/L2", 0); //TODO
+    private SmartDashboardNumber l3ArmPos = new SmartDashboardNumber("Arm/Positions/L3", 0); //TODO
+    
+    //Static arm locations
+    private SmartDashboardNumber shelfArmPos = new SmartDashboardNumber("Arm/Positions/shelf", 0); //TODO
+    private SmartDashboardNumber sourceShellArmPos = new SmartDashboardNumber("Arm/Positions/source-shell", 0); //TODO
+    private SmartDashboardNumber sourceCellArmPos = new SmartDashboardNumber("Arm/Positions/source-cell", 0); //TODO
+    private SmartDashboardNumber stowArmPos = new SmartDashboardNumber("Arm/Positions/stow", 0); //TODO
+    private SmartDashboardNumber stoppedArmPos = new SmartDashboardNumber("Arm/Positions/stopped", 0); //TODO
+
+    //EndEffector
+
+    //Static Velocities
+    SmartDashboardNumber intakingVel = new SmartDashboardNumber("EndEffector/intakingVel", -1200);
+    SmartDashboardNumber intakingCellVel = new SmartDashboardNumber("EndEffector/intakingCellVel", 0);//TODO
+    SmartDashboardNumber intakingShellVel = new SmartDashboardNumber("EndEffector/intakingShellVel", 0);//TODO
+    SmartDashboardNumber scoreShelfVel = new SmartDashboardNumber("EndEffector/scoreShelfVel", 0);//TODO
+    SmartDashboardNumber intakeCellSourceVel = new SmartDashboardNumber("EndEffector/intakeCellSourceVel", 0);//TODO
+    SmartDashboardNumber intakeShellSourceVel = new SmartDashboardNumber("EndEffector/intakeShellSourceVel", 0);//TODO
+
+
+    //LERP disable velocities
+    SmartDashboardNumber staticL1Vel = new SmartDashboardNumber("EndEffector/staticL1Vel", 0);//TODO
+    SmartDashboardNumber staticL2Vel = new SmartDashboardNumber("EndEffector/staticL2Vel", 0);//TODO
+    SmartDashboardNumber staticL3Vel = new SmartDashboardNumber("EndEffector/staticL3Vel", 0);//TODO
+
+    //Intake
 
     //Statemachine to subsystem comms
     //Arm
