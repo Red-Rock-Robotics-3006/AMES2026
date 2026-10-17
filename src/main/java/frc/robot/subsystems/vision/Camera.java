@@ -21,15 +21,18 @@ public class Camera extends SubsystemBase{
     private PhotonCamera cam;
     private PhotonPipelineResult result;
     private PhotonTrackedTarget target;
-    private Pose3d robotPos;
+    private Pose2d robotPos;
     private int[] validTags = {4, 8};
-    private static final double[] tagHeights = {0, 0}; //In meters
-    private static final double[] tagPitches = {0, 0}; //in radians
 
     private Pose3d[] tagPose3ds = { //TODO use field cad
         new Pose3d(new Translation3d(0, 0, 0), new Rotation3d(0, 0, 0)),
         new Pose3d(new Translation3d(0, 0, 0), new Rotation3d(0, 0, 0))
     };
+
+    private Transform3d cameraToRobot = new Transform3d( //TODO where is camera on robot
+        new Translation3d(0, 0, 0), 
+        new Rotation3d(0, 0, 0)
+    );
 
     private Pose2d[] redDockTargets = { //TODO use field cad
         new Pose2d(0, 0, Rotation2d.fromDegrees(0)),
@@ -44,7 +47,7 @@ public class Camera extends SubsystemBase{
         new Pose2d(0, 0, Rotation2d.fromDegrees(0))
     };
 
-    private double distToTag = -1;
+    private Double distToTag = null;
     private double cameraHeight; //meters
     private double cameraPitch; //radians
 
@@ -79,17 +82,14 @@ public class Camera extends SubsystemBase{
     }
 
     //0-3, 0 left, 1 left-middle, 2 right-middle, 3 right
-    public double getDistToTarget(int target){
-        // return PhotonUtils.calculateDistanceToTargetMeters(
-        //     cameraHeight, 
-        //     targetHeight.getNumber(), 
-        //     cameraPitch, 
-        //     targetPitch.getNumber()
-        // );
+    public Double getDistToTarget(int target){
+        if(robotPos == null) return null;
+        return isRedAlliance.getValue()? PhotonUtils.getDistanceToPose(robotPos, redDockTargets[target]): PhotonUtils.getDistanceToPose(robotPos, blueDockTargets[target]);
     }
     
-    public double getAngleToTarget(int target){
-
+    public Rotation2d getYawToTarget(int target){
+        if(robotPos == null) return null;
+        return isRedAlliance.getValue()? PhotonUtils.getYawToPose(robotPos, redDockTargets[target]): PhotonUtils.getYawToPose(robotPos, blueDockTargets[target]);
     }
     
     @Override
@@ -111,55 +111,41 @@ public class Camera extends SubsystemBase{
             if(target.getFiducialId() == validTags[0])
                 distToTag = PhotonUtils.calculateDistanceToTargetMeters(
                     cameraHeight, 
-                    tagHeights[0], 
+                    tagPose3ds[0].getTranslation().getX(), 
                     cameraPitch, 
-                    tagPitches[0]
+                    tagPose3ds[0].getRotation().getY()
                 );
             else if(target.getFiducialId() == validTags[1]){
                 distToTag = PhotonUtils.calculateDistanceToTargetMeters(
                     cameraHeight, 
-                    tagHeights[1], 
+                    tagPose3ds[1].getTranslation().getX(), 
                     cameraPitch, 
-                    tagPitches[1]
+                    tagPose3ds[1].getRotation().getY()
                 );   
             }
         }
         else{
-            distToTag = -1;
+            distToTag = null;
         }
 
         if(this.getValidTagMeasurements() != null){
-            robotPos = PhotonUtils.estimateFieldToRobotAprilTag(
-                this.getValidTagMeasurements(), 
-                robotPos, 
-                getValidTagMeasurements()
-            );
+            if(target.getFiducialId() == validTags[0]){
+                robotPos = PhotonUtils.estimateFieldToRobotAprilTag(
+                    this.getValidTagMeasurements(), 
+                    tagPose3ds[0], 
+                    cameraToRobot
+                ).toPose2d();
+            }
+            else if(target.getFiducialId() == validTags[1]){
+                robotPos = PhotonUtils.estimateFieldToRobotAprilTag(
+                    this.getValidTagMeasurements(), 
+                    tagPose3ds[1], 
+                    cameraToRobot
+                ).toPose2d();   
+            }
         }
-    }
-
-    public static class ValidTags{
-        private int[] valids;
-        private Pose3d[] validPose3ds;
-
-        public ValidTags(int[] valids, Pose3d[] validPose3ds){
-            this.valids = valids;
-            this.validPose3ds = validPose3ds;
-        }
-
-        public int getValidTag(int idx){
-            return valids[idx];
-        }
-
-        public Pose3d getValidTagPose3d(int idx){
-            return validPose3ds[idx];
-        }
-
-        public double getValidTagHeight(int idx){
-            return validPose3ds[idx].getTranslation().getZ();
-        }
-
-        public double getValidTagPitch(int idx){
-            return validPose3ds[idx].getRotation().getY();
+        else{
+            robotPos = null;
         }
     }
 }
