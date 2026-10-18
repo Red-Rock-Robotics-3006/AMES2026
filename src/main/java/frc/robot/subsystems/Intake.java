@@ -1,5 +1,25 @@
 package frc.robot.subsystems;
 
+<<<<<<< HEAD
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+public class Intake extends SubsystemBase{
+    private static Intake instance = null;
+
+    public Intake(){
+
+    }
+
+    @Override
+    public void periodic(){
+
+    }
+
+    public static Intake getInstance(){
+        if(instance == null) instance = new Intake();
+        return instance;
+    }
+=======
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.controls.DutyCycleOut;
@@ -96,4 +116,5 @@ public class Intake extends SubsystemBase {
         return instance;
     }
 
+>>>>>>> 1d6aa763e8acef9d0ddc10921c3b41d925c9f198
 }
