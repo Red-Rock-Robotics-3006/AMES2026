@@ -42,7 +42,10 @@ public class Superstructure {
     private EndEffector endEffector = EndEffector.getInstance();
     private Arm arm = Arm.getInstance();
     private Intake intake = Intake.getInstance();
+<<<<<<< HEAD
     // private CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance(); 
+=======
+>>>>>>> 1d6aa763e8acef9d0ddc10921c3b41d925c9f198
     // private LED led = LED.getInstance();
     // private Elevator elevator = Elevator.getInstance();
 
