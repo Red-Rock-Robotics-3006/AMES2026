@@ -8,31 +8,75 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-<<<<<<< HEAD
-import frc.robot.subsystems.scrapped.EndEffectorPrototype;
+import frc.robot.Superstructure.DockColumns;
+import frc.robot.Superstructure.RobotState;
+import frc.robot.subsystems.EndEffector;
+import frc.robot.subsystems.EndEffectorPrototype;
+import frc.robot.subsystems.Intake;
 
 public class RobotContainer {
   private final static CommandXboxController testStick = new CommandXboxController(0);
   public final static CommandXboxController driveStick = new CommandXboxController(0);
+  public final static CommandXboxController mechStick = new CommandXboxController(0);
   
-  // private final CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
-=======
-import frc.robot.subsystems.EndEffectorPrototype;
-
-public class RobotContainer {
-  private final static CommandXboxController testStick = new CommandXboxController(0);
-
->>>>>>> 1d6aa763e8acef9d0ddc10921c3b41d925c9f198
+  private final CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
   private final EndEffectorPrototype endEffectorPrototype = new EndEffectorPrototype();
+  private final Superstructure superstructure = Superstructure.getInstance();
+  private final Intake intake = new Intake();
+  private final EndEffector endEffector = EndEffector.getInstance();
+
+  private final SwerveRequest csdRequest = 
   public RobotContainer() {
+    // configureTestBindings();
     configureBindings();
   }
-
-<<<<<<< HEAD
-  private void configureTestBindings(){
-=======
+  
   private void configureBindings(){
->>>>>>> 1d6aa763e8acef9d0ddc10921c3b41d925c9f198
+    // driveStick.rightStick().onTrue(csd.seedFieldCentric());
+
+    //Drivestick bindings
+    driveStick.leftTrigger(0.25)
+		.onTrue(superstructure.endEffectCommand())
+		.onFalse(endEffector.stopEndEffectorCommand());
+	driveStick.rightTrigger(0.25)
+		.onTrue(superstructure.endEffectCommand())
+		.onFalse(endEffector.stopEndEffectorCommand());
+
+
+    //Set which column of dock targets to target when auto aligning
+    mechStick.povCenter()
+      	.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE)));
+    mechStick.povUp()
+		.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.LEFT), superstructure))
+		.onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
+
+    mechStick.povLeft()
+		.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.LEFT_MID), superstructure))
+		.onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
+
+    mechStick.povRight()
+		.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.RIGHT_MID), superstructure))
+		.onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
+    mechStick.povDown()
+		.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.RIGHT), superstructure))
+		.onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
+
+		//x=L1, y=L2, b=L3, a=shelf
+    mechStick.x()
+		.onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.L1), superstructure))
+		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
+    mechStick.y()
+		.onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.L2), superstructure))
+		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
+    mechStick.b()
+	    .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.L3), superstructure))
+		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
+    mechStick.a()
+	    .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SHELF), superstructure))
+		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
+
+  }
+  private void configureTestBindings(){
     testStick.y()
       .onTrue(endEffectorPrototype.increaseEndEffectorSpeedTestCommand())
       .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
@@ -47,15 +91,17 @@ public class RobotContainer {
     testStick.b()
       .onTrue(endEffectorPrototype.startEndEffectorTestCommand())
       .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
+
+      
+    testStick.rightTrigger()
+      .onTrue(intake.startIntakeCommand())
+      .onFalse(intake.stopIntakeCommand());
+    testStick.leftTrigger()
+      .onTrue(intake.reverseIntakeCommand())
+      .onFalse(intake.stopIntakeCommand());
   }
 
-<<<<<<< HEAD
-  private void configureBindings(){
-    // driveStick.rightStick().onTrue(csd.seedFieldCentric());
-  }
 
-=======
->>>>>>> 1d6aa763e8acef9d0ddc10921c3b41d925c9f198
   public Command getAutonomousCommand() {
     return Commands.print("No autonomous command configured");
   }

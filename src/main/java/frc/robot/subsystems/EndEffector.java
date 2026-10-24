@@ -26,7 +26,7 @@ public class EndEffector extends SubsystemBase{
 
     //Thresholds and Limits
     SmartDashboardNumber velocityThreshold = new SmartDashboardNumber("EndEffector/velocityThreshold", 4);
-
+    SmartDashboardNumber intakeVelocity = new SmartDashboardNumber("EndEffector/intaking-velocity", -1200);
     private SmartDashboardNumber currentLimit = new SmartDashboardNumber("EndEffector/current-limit", 45);
 
     public EndEffector(){
@@ -103,9 +103,9 @@ public class EndEffector extends SubsystemBase{
     }
     
 
-    public Command intakeCommand(double velocity){
+    public Command intakeCommand(){
         return new FunctionalCommand(
-            () -> this.setSpeed(velocity), 
+            () -> this.setSpeed(intakeVelocity.getNumber()), 
             () -> {}, 
             (interrupted) -> this.stop(), 
             () -> {
