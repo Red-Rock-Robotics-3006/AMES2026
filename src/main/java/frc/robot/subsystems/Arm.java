@@ -43,7 +43,7 @@ public class Arm extends SubsystemBase{
     //Limits and Thresholds
     private SmartDashboardNumber minArmPos = new SmartDashboardNumber("Arm/Positions/min", 0); //TODO
     private SmartDashboardNumber maxArmPos = new SmartDashboardNumber("Arm/Positions/max", 0); //TODO
-    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("Arm/Tolerance", 0); //TODO //In rotations
+    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("Arm/Tolerance", 0.1); //TODO //In rotations
     private SmartDashboardNumber currentLimit = new SmartDashboardNumber("Arm/current-limit", 45);
     
     //Testing
@@ -139,12 +139,6 @@ public class Arm extends SubsystemBase{
     }
 
     //Commands
-    public Command goToPosCommand(double pos, double dist){
-        return Commands.runOnce(
-            () -> armToPos(pos), 
-            this
-        );
-    }
 
     public Command goToStaticPosCommand(double pos){// I changed the end effector intake command to a new version called intakeCommand, it takes in a velocity. will implement in the superstructure
         return Commands.runOnce(

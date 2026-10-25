@@ -14,6 +14,10 @@ import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.EndEffectorPrototype;
 import frc.robot.subsystems.Intake;
 
+import com.ctre.phoenix6.signals.RobotEnableValue;
+import com.ctre.phoenix6.swerve.SwerveRequest;
+
+
 public class RobotContainer {
   private final static CommandXboxController testStick = new CommandXboxController(0);
   public final static CommandXboxController driveStick = new CommandXboxController(0);
@@ -25,7 +29,7 @@ public class RobotContainer {
   private final Intake intake = new Intake();
   private final EndEffector endEffector = EndEffector.getInstance();
 
-  private final SwerveRequest csdRequest = 
+  private final SwerveRequest.FieldCentric csdRequest = new SwerveRequest.FieldCentric();
   public RobotContainer() {
     // configureTestBindings();
     configureBindings();
@@ -35,13 +39,15 @@ public class RobotContainer {
     // driveStick.rightStick().onTrue(csd.seedFieldCentric());
 
     //Drivestick bindings
-    driveStick.leftTrigger(0.25)
+    driveStick.leftTrigger(0.25) //Shoots with lerp
 		.onTrue(superstructure.endEffectCommand())
 		.onFalse(endEffector.stopEndEffectorCommand());
 	driveStick.rightTrigger(0.25)
-		.onTrue(superstructure.endEffectCommand())
-		.onFalse(endEffector.stopEndEffectorCommand());
-
+		.onTrue(Commands.sequence(
+			endEffector.intakeCommand(), 
+			intake.startIntakeCommand())
+		)
+		.onFalse(intake.stopIntakeCommand());
 
     //Set which column of dock targets to target when auto aligning
     mechStick.povCenter()
@@ -61,7 +67,7 @@ public class RobotContainer {
 		.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.RIGHT), superstructure))
 		.onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
 
-		//x=L1, y=L2, b=L3, a=shelf
+	//x=L1, y=L2, b=L3, a=shelf
     mechStick.x()
 		.onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.L1), superstructure))
 		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
@@ -75,7 +81,20 @@ public class RobotContainer {
 	    .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SHELF), superstructure))
 		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
 
+	mechStick.leftTrigger(0.25) 
+		.onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SOURCE_SHELL), superstructure))
+		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.IDLE), superstructure)); //Stops all subsystems
+	mechStick.rightTrigger(0.25) 
+		.onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SOURCE_CELL), superstructure))
+		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.IDLE), superstructure));
   }
+
+
+
+
+
+
+  
   private void configureTestBindings(){
     testStick.y()
       .onTrue(endEffectorPrototype.increaseEndEffectorSpeedTestCommand())

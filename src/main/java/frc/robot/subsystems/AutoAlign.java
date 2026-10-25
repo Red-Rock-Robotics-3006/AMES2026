@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.subsystems.vision.Odometry;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PIDCommand;
@@ -23,6 +24,7 @@ import frc.robot.subsystems.vision.Camera;
 import redrocklib.logging.SmartDashboardNumber;
 
 public class AutoAlign extends SubsystemBase{
+    private static AutoAlign instance = null;
     CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
     
     //PID and movement
@@ -42,6 +44,7 @@ public class AutoAlign extends SubsystemBase{
     //Odometry variables
     Odometry odometry = Odometry.getInstance();
     Pose2d relativePose2d = new Pose2d();
+
 
     //The target exists to be used in the methods here; it gets set in the autoAlignToTarget method and gets interfaced by the odometry logic in periodic.
     int target = -1;
@@ -65,6 +68,7 @@ public class AutoAlign extends SubsystemBase{
         return MathUtil.clamp(pidTheta.calculate(0,distTheta), -this.maxRotationSpeed.getNumber(),this.maxRotationSpeed.getNumber());
     }
 
+
     //each tick this method runs while auto aligning. It takes in the dimensions boolean[], which has whether a certain component is aligning(true means aligning), and applies a request to the swerve if the cams have a valid robot pose.
     private void align(){
         if(this.relativePose2d == null) return;
@@ -86,7 +90,7 @@ public class AutoAlign extends SubsystemBase{
                                 ;
     }
 
-    private boolean alignedToTarget(boolean[] dimensions) {
+    public boolean alignedToTarget() {
         return (this.relativePose2d.getX() < this.translationThreshold.getNumber()) &&
                (this.relativePose2d.getY() < this.translationThreshold.getNumber()) &&
                (this.relativePose2d.getRotation().getRadians() < this.rotationThreshold.getNumber()); 
@@ -105,14 +109,25 @@ public class AutoAlign extends SubsystemBase{
     @Override
     public void periodic(){
         //Update odometry values
-        Double distFromTarget = odometry.getDistToTarget(this.target);
-        Double angleFromTarget = odometry.getYawToTarget(this.target).getRadians();
+        Double distFromTarget = odometry.get2dDistToTargetAllCams(this.target);
+        Double angleFromTarget = odometry.get2dYawToTargetAllCams(this.target).getRadians();
 
         if(distFromTarget == null || angleFromTarget == null){
             this.relativePose2d = null;
         }
         else{
-            this.relativePose2d = new Pose2d(distFromTarget * Math.cos(angleFromTarget), distFromTarget * Math.sin(angleFromTarget), odometry.getYawToTarget(this.target));
+            this.relativePose2d = new Pose2d(distFromTarget * Math.cos(angleFromTarget), distFromTarget * Math.sin(angleFromTarget), odometry.get2dYawToTargetAllCams(this.target));
         }
+
+
+        SmartDashboard.putNumber("AutoAlign/Relative X from Target", this.relativePose2d.getX());
+        SmartDashboard.putNumber("AutoAlign/Relative Y from Target", this.relativePose2d.getY());
+        SmartDashboard.putNumber("AutoAlign/Relative \u03B8 from Target", this.relativePose2d.getRotation().getDegrees());
+
+    }
+
+    public static AutoAlign getInstance(){
+        if(instance == null) instance = new AutoAlign();
+        return instance;
     }
 }

@@ -7,12 +7,14 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.AutoAlign;
 // import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.vision.Odometry;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LED;
 import frc.robot.subsystems.constants.LERPTables;
+import redrocklib.logging.SmartDashboardBoolean;
 import redrocklib.logging.SmartDashboardNumber;
 
 public class Superstructure extends SubsystemBase{
@@ -41,6 +43,7 @@ public class Superstructure extends SubsystemBase{
     private Arm arm = Arm.getInstance();
     private Intake intake = Intake.getInstance();
     private Odometry odometry = Odometry.getInstance();
+    private AutoAlign autoAlign = AutoAlign.getInstance();
 
     // private CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance(); 
     // private LED led = LED.getInstance();
@@ -57,7 +60,6 @@ public class Superstructure extends SubsystemBase{
     private SmartDashboardNumber sourceShellArmPos = new SmartDashboardNumber("Arm/Positions/source-shell", 0); //TODO
     private SmartDashboardNumber sourceCellArmPos = new SmartDashboardNumber("Arm/Positions/source-cell", 0); //TODO
     private SmartDashboardNumber stowArmPos = new SmartDashboardNumber("Arm/Positions/stow", 0); //TODO
-    private SmartDashboardNumber stoppedArmPos = new SmartDashboardNumber("Arm/Positions/stopped", 0); //TODO
 
     //EndEffector
 
@@ -78,7 +80,6 @@ public class Superstructure extends SubsystemBase{
     //Intake
 
     //Odometry
-    private DockColumns dockColumnTarget = DockColumns.NONE;
     public static enum DockColumns{
         LEFT,
         LEFT_MID,
@@ -86,6 +87,30 @@ public class Superstructure extends SubsystemBase{
         RIGHT,
         NONE
     }
+
+    private DockColumns dockColumnTarget = DockColumns.NONE;
+
+    public DockColumns getDockColumns(){
+        return dockColumnTarget;
+    }
+
+    public int getIntDockCol(DockColumns dockCol){
+        switch(dockCol){
+            case LEFT:
+                return 0;
+            case LEFT_MID:
+                return 1;
+            case RIGHT_MID:
+                return 2;
+            case RIGHT:
+                return 3;
+            case NONE:
+            default:
+                return -1;
+        }
+        
+    }
+
     private double distanceFromTarget;
 
     //Statemachine to subsystem comms
@@ -100,20 +125,20 @@ public class Superstructure extends SubsystemBase{
             case L3:
                 return LERPTables.l3ArmPosLerpTable.get(dist);
             case INTAKING_CELL:
-            return this.sourceCellArmPos.getNumber();
+                return this.stowArmPos.getNumber();
             case INTAKING_SHELL:
-            return this.sourceShellArmPos.getNumber();
+                return this.stowArmPos.getNumber();
             case SOURCE_CELL:
-            return this.sourceCellArmPos.getNumber();
+                return this.sourceCellArmPos.getNumber();
             case SOURCE_SHELL:
                 return this.sourceShellArmPos.getNumber();
-                case SHELF:
+            case SHELF:
                 return this.shelfArmPos.getNumber();
-                case STOW:
+            case STOW:
                 return this.stowArmPos.getNumber();
-                case IDLE:
-                return this.stoppedArmPos.getNumber();
-                default:
+            case IDLE:
+                return this.stowArmPos.getNumber();
+            default:
                 return 0.0;
             }
     }    
@@ -126,18 +151,15 @@ public class Superstructure extends SubsystemBase{
             return this.l2ArmPos.getNumber();
             case L3:
             return this.l3ArmPos.getNumber();
-            case INTAKING_CELL:
-            return this.sourceCellArmPos.getNumber();
-            case INTAKING_SHELL:
-            return this.sourceShellArmPos.getNumber();
             case SOURCE_CELL:
             return this.sourceCellArmPos.getNumber();
             case SOURCE_SHELL:
             return this.sourceShellArmPos.getNumber();
             case SHELF:
             return this.shelfArmPos.getNumber();
+            case INTAKING_CELL:     //Currently we want all these poses to be the same as stow but are keeping them incase they need to be different values after testing
+            case INTAKING_SHELL:
             case IDLE:
-            return this.stoppedArmPos.getNumber();
             case STOW:
             return this.stowArmPos.getNumber();
             default:
@@ -157,15 +179,15 @@ public class Superstructure extends SubsystemBase{
             case INTAKING_CELL:
                 return this.intakingCellVel.getNumber();
             case INTAKING_SHELL:
-            return this.intakingShellVel.getNumber();
+                return this.intakingShellVel.getNumber();
             case SOURCE_CELL:
-            return this.intakeCellSourceVel.getNumber();
+                return this.intakeCellSourceVel.getNumber();
             case SOURCE_SHELL:
                 return this.intakeShellSourceVel.getNumber();
             case SHELF:
                 return this.scoreShelfVel.getNumber();
             case IDLE:
-            return 0;
+                return 0;
             case STOW:
                 return 0;
             default:
@@ -177,15 +199,15 @@ public class Superstructure extends SubsystemBase{
             case L1:
                 return this.staticL1Vel.getNumber();
             case L2: 
-            return this.staticL1Vel.getNumber();
+                return this.staticL1Vel.getNumber();
             case L3:
                 return this.staticL3Vel.getNumber();
-                case INTAKING_CELL:
+            case INTAKING_CELL:
                 return this.intakingCellVel.getNumber();
             case INTAKING_SHELL:
-            return this.intakingShellVel.getNumber();
+                return this.intakingShellVel.getNumber();
             case SOURCE_CELL:
-            return this.intakeCellSourceVel.getNumber();
+                return this.intakeCellSourceVel.getNumber();
             case SOURCE_SHELL:
                 return this.intakeShellSourceVel.getNumber();
             case SHELF:
@@ -198,6 +220,7 @@ public class Superstructure extends SubsystemBase{
                 return 0.0;
             }
     }
+
     public Command endEffectCommand(){
         return Commands.runOnce(() -> this.endEffector.shootCommand(stateToVelocity(this.wantedState, this.distanceFromTarget)), endEffector);
     }
@@ -223,24 +246,7 @@ public class Superstructure extends SubsystemBase{
         return currentState;
     }
 
-    public DockColumns getDockColumns(){
-        return dockColumnTarget;
-    }
-
-    public int getIntDockCol(DockColumns dockCol){
-        switch(dockCol){
-            case LEFT:
-                return 0;
-            case LEFT_MID:
-                return 1;
-            case RIGHT_MID:
-                return 2;
-            case RIGHT:
-                return 3;
-            case NONE:
-                return -1;
-        }
-    }
+    
     public void initializeBot(){
         this.arm.zeroArmCommand();
     }
@@ -253,7 +259,8 @@ public class Superstructure extends SubsystemBase{
             (interrupted) -> this.setCurrentRobotState(state),
             () -> {
                 return arm.atWantedArmPos(this.stateToArmPosStatic(wantedState));
-            }
+            },
+            this
         );
     }
 
@@ -264,25 +271,21 @@ public class Superstructure extends SubsystemBase{
             (interrupted) -> this.setCurrentRobotState(state),
             () -> {
                 return arm.atWantedArmPos(this.stateToArmPosStatic(wantedState));
-            }
+            },
+            this
         );
     }
     
     public Command idleCommand(){
         return Commands.sequence(
             Commands.runOnce(() -> this.setWantedRobotState(RobotState.IDLE)),
-            Commands.runOnce(() -> arm.stopArmCommand(), arm),
+            Commands.runOnce(() -> arm.goToStaticPosCommand(this.stateToArmPosStatic(RobotState.IDLE)), arm),
             Commands.runOnce(() -> endEffector.stopEndEffectorCommand(), endEffector),
-            // Commands.runOnce(() -> intake.stopIntakeCommand(), intake),
             Commands.runOnce(() -> this.setCurrentRobotState(RobotState.IDLE))
         );
     }
 
-    public static Superstructure getInstance(){
-        if(instance == null) instance = new Superstructure();
-        return instance;
-    }
-
+    
     //since cases are very similar let similar cases fall through to the next, it will end at the break
     private void goToWantedState(){
         switch(this.wantedState){
@@ -290,29 +293,37 @@ public class Superstructure extends SubsystemBase{
             case L2:
             case L3:
                 if(this.dockColumnTarget != DockColumns.NONE){
-                    Commands.sequence(
-                        this.goToArmPosCommand(wantedState, distanceFromTarget)
+                    // Commands.sequence(
+                        this.goToArmPosCommand(wantedState, distanceFromTarget);
                         // this.endEffector.shootCommand(this.stateToVelocity(RobotState.L1, distanceFromTarget))
-                    );
-                }
+                        // );
+                    }
                 else
-                    Commands.sequence(
-                        this.goToArmPosStaticCommand(wantedState)
+                // Commands.sequence(
+                        this.goToArmPosStaticCommand(wantedState);
                         // this.endEffector.shootCommand(this.stateToVelocitySTATIC(wantedState))
-                    );
+                    // );
                 break;
-            case SOURCE_SHELL:
+            case SOURCE_SHELL: //could also make it so when wantedState is source start end effector intaking
             case SOURCE_CELL:
-            case INTAKING_CELL:
-            case INTAKING_SHELL:
                 Commands.sequence(
-                    this.goToArmPosStaticCommand(wantedState)
+                    this.goToArmPosStaticCommand(wantedState),
+                    endEffector.intakeCommand()
                 );
                 break;
-            case SHELF:
+            case INTAKING_CELL:
+            case INTAKING_SHELL:
             case STOW:
-            case IDLE:
                 this.goToArmPosStaticCommand(wantedState);
+                break;
+            case SHELF:
+                Commands.sequence(
+                    this.goToArmPosStaticCommand(wantedState),
+                    endEffector.outakeCommand()
+                );
+                break;
+            case IDLE:
+                this.idleCommand();
                 break;
             default:
                 return;
@@ -323,8 +334,17 @@ public class Superstructure extends SubsystemBase{
     public void periodic(){
         distanceFromTarget = dockColumnTarget!=DockColumns.NONE?odometry.get2dDistToTargetAllCams(this.getIntDockCol(dockColumnTarget)):-1;
         this.goToWantedState();
-
-
+        
+        if(this.dockColumnTarget != DockColumns.NONE){
+            autoAlign.autoAlignToTarget(this.getIntDockCol(dockColumnTarget));
+            SmartDashboard.putBoolean("Superstructure/aligning-to-target", this.dockColumnTarget != DockColumns.NONE);
+            SmartDashboard.putBoolean("Superstructure/aligned-to-target", autoAlign.alignedToTarget());
+        }
         // SmartDashboard.putData("Superstructure/current-state", (Sendable)currentState);
+    }
+
+    public static Superstructure getInstance(){
+        if(instance == null) instance = new Superstructure();
+        return instance;
     }
 }

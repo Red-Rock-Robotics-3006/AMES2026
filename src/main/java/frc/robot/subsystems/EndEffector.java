@@ -25,8 +25,9 @@ public class EndEffector extends SubsystemBase{
     private final RedRockTalon endEffectMotor = new RedRockTalon(0, "EndEffector/endEffectMotor"); //TODO
 
     //Thresholds and Limits
-    SmartDashboardNumber velocityThreshold = new SmartDashboardNumber("EndEffector/velocityThreshold", 4);
+    SmartDashboardNumber velocityThreshold = new SmartDashboardNumber("EndEffector/velocityThreshold", 70);
     SmartDashboardNumber intakeVelocity = new SmartDashboardNumber("EndEffector/intaking-velocity", -1200);
+    SmartDashboardNumber outakeVelocity = new SmartDashboardNumber("EndEffector/outaking-velocity", 500);
     private SmartDashboardNumber currentLimit = new SmartDashboardNumber("EndEffector/current-limit", 45);
 
     public EndEffector(){
@@ -96,9 +97,9 @@ public class EndEffector extends SubsystemBase{
         );
     }
 
-    public Command ejectPieceCommand(){
+    public Command outakeCommand(){
         return Commands.runOnce(
-            () -> this.setSpeed(-500), this
+            () -> this.setSpeed(this.outakeVelocity.getNumber()), this
         );
     }
     

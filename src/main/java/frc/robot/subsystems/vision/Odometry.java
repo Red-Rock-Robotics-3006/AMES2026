@@ -23,6 +23,8 @@ import frc.robot.Superstructure.DockColumns;
 public class Odometry extends SubsystemBase{
     private static Odometry instance = null;
 
+    private CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
+
     private static ArrayList<Camera> cameras = new ArrayList<>();
     private final SwerveDrivePoseEstimator posEstimator;
     private final Supplier<SwerveDriveKinematics> kinematics;
@@ -35,12 +37,13 @@ public class Odometry extends SubsystemBase{
     private PhotonPoseEstimator posEstimate2;
     private PhotonPoseEstimator posEstimate3;
    
-    public Odometry(Supplier<SwerveDriveKinematics> kinematics, Supplier<Rotation2d> gyroRotation2d, Supplier<SwerveModulePosition[]> modulePositions){
+    public Odometry(){
         super("Odometry");
 
-        this.kinematics = kinematics;
-        this.gyRotation2d = gyroRotation2d;
-        this.modulePositions = modulePositions;
+        this.kinematics = csd.getKinematicsSupplier();
+        this.gyRotation2d = csd.getGyroRotation2dSupplier();
+        this.modulePositions = csd.getModulePosesSupplier();
+        
         posEstimator = new SwerveDrivePoseEstimator(
             this.kinematics.get(), 
             this.gyRotation2d.get(), 
@@ -81,8 +84,9 @@ public class Odometry extends SubsystemBase{
         }
     }
 
-    public static Odometry getInstance(Supplier<SwerveDriveKinematics> kin, Supplier<Rotation2d> gyro2d, Supplier<SwerveModulePosition[]> modulePoses){
-        if(instance == null) instance = new Odometry(kin, gyro2d, modulePoses);
+    public static Odometry getInstance(){
+        if(instance == null) instance = new Odometry();
         return instance;
     }
+
 }
