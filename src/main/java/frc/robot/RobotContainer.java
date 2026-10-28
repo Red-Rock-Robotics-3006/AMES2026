@@ -4,11 +4,13 @@
 
 package frc.robot;
 
+// import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Superstructure.DockColumns;
+import frc.robot.subsystems.vision.Odometry;
 import frc.robot.Superstructure.RobotState;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.EndEffectorPrototype;
@@ -28,8 +30,9 @@ public class RobotContainer {
   private final Superstructure superstructure = Superstructure.getInstance();
   private final Intake intake = new Intake();
   private final EndEffector endEffector = EndEffector.getInstance();
-
+  private final Odometry odometry = Odometry.getInstance();
   private final SwerveRequest.FieldCentric csdRequest = new SwerveRequest.FieldCentric();
+  
   public RobotContainer() {
     // configureTestBindings();
     configureBindings();
@@ -39,15 +42,20 @@ public class RobotContainer {
     // driveStick.rightStick().onTrue(csd.seedFieldCentric());
 
     //Drivestick bindings
-    driveStick.leftTrigger(0.25) //Shoots with lerp
-		.onTrue(superstructure.endEffectCommand())
-		.onFalse(endEffector.stopEndEffectorCommand());
+	if(odometry.get2dDistToTargetAllCams(superstructure.getIntDockCol(superstructure.getDockColumn())) <= 5){
+		driveStick.leftTrigger(0.25) //Shoots with lerp
+			.onTrue(superstructure.endEffectCommand())
+			.onFalse(endEffector.stopEndEffectorCommand());
+	}
 	driveStick.rightTrigger(0.25)
 		.onTrue(Commands.sequence(
 			endEffector.intakeCommand(), 
 			intake.startIntakeCommand())
 		)
 		.onFalse(intake.stopIntakeCommand());
+	driveStick.rightBumper()
+		.onTrue(endEffector.outakeCommand())
+		.onFalse(endEffector.stopEndEffectorCommand());
 
     //Set which column of dock targets to target when auto aligning
     mechStick.povCenter()
@@ -83,11 +91,21 @@ public class RobotContainer {
 
 	mechStick.leftTrigger(0.25) 
 		.onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SOURCE_SHELL), superstructure))
-		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.IDLE), superstructure)); //Stops all subsystems
+		.onFalse(
+			Commands.sequence(
+				Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTERMEDIATE), superstructure),
+				Commands.runOnce(() -> endEffector.stopEndEffectorCommand(), endEffector)
+			)   
+		);
 	mechStick.rightTrigger(0.25) 
 		.onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SOURCE_CELL), superstructure))
-		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.IDLE), superstructure));
-  }
+		.onFalse(
+			Commands.sequence(
+				Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTERMEDIATE), superstructure),
+				Commands.runOnce(() -> endEffector.stopEndEffectorCommand(), endEffector)
+			)   
+		);  
+	}
 
 
 

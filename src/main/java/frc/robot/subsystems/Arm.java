@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.AutoLogOutputManager;
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
@@ -53,6 +56,7 @@ public class Arm extends SubsystemBase{
     public Arm(){
         super("Arm");
 
+        AutoLogOutputManager.addObject(this);
         FeedbackConfigs feedbackConfigs = new FeedbackConfigs()
         .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
         .withFeedbackRemoteSensorID(encoder.getDeviceID())
@@ -117,6 +121,7 @@ public class Arm extends SubsystemBase{
 
     private void armToPos(double pos){
         this.pivotMotor.setMotionMagicPosition(MathUtil.clamp(pos, minArmPos.getNumber(), maxArmPos.getNumber()));
+        Logger.recordOutput("Arm/desiredArmPos", pos);
     }
 
 
@@ -193,15 +198,19 @@ public class Arm extends SubsystemBase{
     public void periodic(){
         this.pivotMotor.update();
 
-        SmartDashboard.putBoolean("Arm/at-wanted-pos", this.atWantedArmPos(0)); //TODO add distance from peg board when have odometry
         
+
         StatusSignal<Angle> encoderPos = encoder.getPosition();
         encoderPos.refresh();
         SmartDashboard.putNumber("Arm/encoder/posistion-rotations", encoderPos.getValueAsDouble());
+        Logger.recordOutput("Arm/encoder/posistion-rotations", encoderPos.getValueAsDouble());
     
         SmartDashboard.putNumber("Arm/supply-current", this.pivotMotor.motor.getSupplyCurrent().getValueAsDouble());
+        Logger.recordOutput("Arm/supply-current", this.pivotMotor.motor.getSupplyCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Arm/velocity", this.pivotMotor.motor.getVelocity().getValueAsDouble());
+        Logger.recordOutput("Arm/velocity", this.pivotMotor.motor.getVelocity().getValueAsDouble());
         SmartDashboard.putNumber("Arm/acceleration", this.pivotMotor.motor.getAcceleration().getValueAsDouble());
+        Logger.recordOutput("Arm/acceleration", this.pivotMotor.motor.getAcceleration().getValueAsDouble());
     }
 
     public static Arm getInstance(){

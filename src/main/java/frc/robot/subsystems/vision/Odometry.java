@@ -2,20 +2,28 @@ package frc.robot.subsystems.vision;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 import java.util.function.Supplier;
 
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.epilogue.Logged.Strategy;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.numbers.N3; 
+import edu.wpi.first.math.numbers.N1; 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Superstructure.DockColumns;
 
@@ -26,10 +34,14 @@ public class Odometry extends SubsystemBase{
     private CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
 
     private static ArrayList<Camera> cameras = new ArrayList<>();
+    private final PhotonPoseEstimator[] photonPoseEstimators;
+
     private final SwerveDrivePoseEstimator posEstimator;
     private final Supplier<SwerveDriveKinematics> kinematics;
     private final Supplier<Rotation2d> gyRotation2d;
     private final Supplier<SwerveModulePosition[]> modulePositions;
+    private static final Matrix<N3, N1> stateStdDevs  = VecBuilder.fill(0.3, 0.3, Units.degreesToRadians(2));
+    private static final Matrix<N3, N1> visionStdDevs  = VecBuilder.fill(0.05, 0.05, 99999999);
 
     private static final AprilTagFieldLayout field = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField); //Change to load custom field
 
@@ -43,7 +55,7 @@ public class Odometry extends SubsystemBase{
         this.kinematics = csd.getKinematicsSupplier();
         this.gyRotation2d = csd.getGyroRotation2dSupplier();
         this.modulePositions = csd.getModulePosesSupplier();
-        
+
         posEstimator = new SwerveDrivePoseEstimator(
             this.kinematics.get(), 
             this.gyRotation2d.get(), 
@@ -51,9 +63,16 @@ public class Odometry extends SubsystemBase{
             new Pose2d()
         );
 
-        cameras.add(new Camera("Name", 0, 0, 0, 0, 0, 0)); //TODO name and add vals to cams
-        cameras.add(new Camera("Name", 0, 0, 0, 0, 0, 0));
-        cameras.add(new Camera("Name", 0, 0, 0, 0, 0, 0));
+        cameras.add(new Camera("Name1", this.gyRotation2d, 0, 0, 0, 0, 0, 0)); //TODO name and add vals to cams
+        cameras.add(new Camera("Name2", this.gyRotation2d, 0, 0, 0, 0, 0, 0));
+        cameras.add(new Camera("Name3", this.gyRotation2d, 0, 0, 0, 0, 0, 0));
+        cameras.add(new Camera("Name4", this.gyRotation2d, 0, 0, 0, 0, 0, 0));
+    
+        for(int i = 0; i < cameras.size(); i++){
+            photonPoseEstimators[i] = new PhotonPoseEstimator(field, PoseStrategy.PNP_DISTANCE_TRIG_SOLVE, cameras.get(i).getRobotToCamera());
+            //Depricated method, TODO find another way to do lowest ambiguity
+            // photonPoseEstimators[i].setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+        }
     }
 
     public Double get2dDistToTargetAllCams(int targetCol){

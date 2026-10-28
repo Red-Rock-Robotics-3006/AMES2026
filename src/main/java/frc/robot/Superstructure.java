@@ -1,5 +1,8 @@
 package frc.robot;
 
+import org.littletonrobotics.junction.AutoLogOutputManager;
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -29,14 +32,14 @@ public class Superstructure extends SubsystemBase{
         SOURCE_CELL,
         SOURCE_SHELL,
         SHELF,
-        IDLE,
-        STOW,
+        INTERMEDIATE,
+        STOW 
     }
 
     
     
-    private RobotState wantedState = RobotState.IDLE;
-    private RobotState currentState = RobotState.IDLE;
+    private RobotState wantedState = RobotState.INTERMEDIATE;
+    private RobotState currentState = RobotState.INTERMEDIATE;
 
     
     private EndEffector endEffector = EndEffector.getInstance();
@@ -60,7 +63,7 @@ public class Superstructure extends SubsystemBase{
     private SmartDashboardNumber sourceShellArmPos = new SmartDashboardNumber("Arm/Positions/source-shell", 0); //TODO
     private SmartDashboardNumber sourceCellArmPos = new SmartDashboardNumber("Arm/Positions/source-cell", 0); //TODO
     private SmartDashboardNumber stowArmPos = new SmartDashboardNumber("Arm/Positions/stow", 0); //TODO
-
+    private SmartDashboardNumber intermediatePos = new SmartDashboardNumber("Arm/Positins/intermediate", 0);
     //EndEffector
 
     //Static Velocities
@@ -90,7 +93,7 @@ public class Superstructure extends SubsystemBase{
 
     private DockColumns dockColumnTarget = DockColumns.NONE;
 
-    public DockColumns getDockColumns(){
+    public DockColumns getDockColumn(){
         return dockColumnTarget;
     }
 
@@ -109,6 +112,17 @@ public class Superstructure extends SubsystemBase{
                 return -1;
         }
         
+    }
+
+    public Command fullAutoAlignCommand(){
+        int target = getIntDockCol(this.dockColumnTarget);
+        if(!(target !=0 || odometry.get2dDistToTargetAllCams(target) != null)){
+            Logger.recordOutput("Superstructure/ Auto Aligning", false);
+            return null;
+        }
+        Logger.recordOutput("Superstructure/ Auto Aligning", true);
+        return autoAlign.autoAlignToTarget(target,  true);
+                
     }
 
     private double distanceFromTarget;
@@ -136,8 +150,8 @@ public class Superstructure extends SubsystemBase{
                 return this.shelfArmPos.getNumber();
             case STOW:
                 return this.stowArmPos.getNumber();
-            case IDLE:
-                return this.stowArmPos.getNumber();
+            case INTERMEDIATE:
+                return this.intermediatePos.getNumber();
             default:
                 return 0.0;
             }
@@ -146,22 +160,23 @@ public class Superstructure extends SubsystemBase{
     private double stateToArmPosStatic(Superstructure.RobotState state){
         switch(state){
             case L1:
-            return this.l1ArmPos.getNumber();
+                return this.l1ArmPos.getNumber();
             case L2:
-            return this.l2ArmPos.getNumber();
+                return this.l2ArmPos.getNumber();
             case L3:
-            return this.l3ArmPos.getNumber();
+                return this.l3ArmPos.getNumber();
             case SOURCE_CELL:
-            return this.sourceCellArmPos.getNumber();
+                return this.sourceCellArmPos.getNumber();
             case SOURCE_SHELL:
-            return this.sourceShellArmPos.getNumber();
+                return this.sourceShellArmPos.getNumber();
             case SHELF:
-            return this.shelfArmPos.getNumber();
+                return this.shelfArmPos.getNumber();
             case INTAKING_CELL:     //Currently we want all these poses to be the same as stow but are keeping them incase they need to be different values after testing
             case INTAKING_SHELL:
-            case IDLE:
             case STOW:
-            return this.stowArmPos.getNumber();
+                return this.stowArmPos.getNumber();
+            case INTERMEDIATE:
+                return this.intermediatePos.getNumber();
             default:
                 return 0.0;
         }
@@ -186,12 +201,12 @@ public class Superstructure extends SubsystemBase{
                 return this.intakeShellSourceVel.getNumber();
             case SHELF:
                 return this.scoreShelfVel.getNumber();
-            case IDLE:
+            case INTERMEDIATE:
                 return 0;
             case STOW:
                 return 0;
             default:
-            return 0.0;
+                return 0.0;
         }
     }
     private double stateToVelocitySTATIC(Superstructure.RobotState state){
@@ -212,11 +227,11 @@ public class Superstructure extends SubsystemBase{
                 return this.intakeShellSourceVel.getNumber();
             case SHELF:
                 return this.scoreShelfVel.getNumber();
-            case IDLE:
+            case INTERMEDIATE:
                 return 0;
             case STOW:
                 return 0;
-                default:
+            default:
                 return 0.0;
             }
     }
@@ -278,10 +293,9 @@ public class Superstructure extends SubsystemBase{
     
     public Command idleCommand(){
         return Commands.sequence(
-            Commands.runOnce(() -> this.setWantedRobotState(RobotState.IDLE)),
-            Commands.runOnce(() -> arm.goToStaticPosCommand(this.stateToArmPosStatic(RobotState.IDLE)), arm),
-            Commands.runOnce(() -> endEffector.stopEndEffectorCommand(), endEffector),
-            Commands.runOnce(() -> this.setCurrentRobotState(RobotState.IDLE))
+            Commands.runOnce(() -> arm.idle()),
+            Commands.runOnce(() -> endEffector.stopEndEffectorCommand()),
+            Commands.runOnce(() -> intake.stopIntake())
         );
     }
 
@@ -306,6 +320,7 @@ public class Superstructure extends SubsystemBase{
                 break;
             case SOURCE_SHELL: //could also make it so when wantedState is source start end effector intaking
             case SOURCE_CELL:
+                Logger.recordOutput("Superstructure/ Auto Aligning", false);
                 Commands.sequence(
                     this.goToArmPosStaticCommand(wantedState),
                     endEffector.intakeCommand()
@@ -313,17 +328,11 @@ public class Superstructure extends SubsystemBase{
                 break;
             case INTAKING_CELL:
             case INTAKING_SHELL:
+            case INTERMEDIATE:
             case STOW:
-                this.goToArmPosStaticCommand(wantedState);
-                break;
             case SHELF:
-                Commands.sequence(
-                    this.goToArmPosStaticCommand(wantedState),
-                    endEffector.outakeCommand()
-                );
-                break;
-            case IDLE:
-                this.idleCommand();
+                Logger.recordOutput("Superstructure/ Auto Aligning", false);
+                this.goToArmPosStaticCommand(wantedState);
                 break;
             default:
                 return;
@@ -334,15 +343,21 @@ public class Superstructure extends SubsystemBase{
     public void periodic(){
         distanceFromTarget = dockColumnTarget!=DockColumns.NONE?odometry.get2dDistToTargetAllCams(this.getIntDockCol(dockColumnTarget)):-1;
         this.goToWantedState();
+
+        SmartDashboard.putBoolean("Arm/at-wanted-pos", arm.atWantedArmPos(distanceFromTarget)); //TODO add distance from peg board when have odometry
+        Logger.recordOutput("Arm/at-wanted-pos", arm.atWantedArmPos(distanceFromTarget)); //TODO add distance from peg board when have odometry
         
-        if(this.dockColumnTarget != DockColumns.NONE){
-            autoAlign.autoAlignToTarget(this.getIntDockCol(dockColumnTarget));
-            SmartDashboard.putBoolean("Superstructure/aligning-to-target", this.dockColumnTarget != DockColumns.NONE);
-            SmartDashboard.putBoolean("Superstructure/aligned-to-target", autoAlign.alignedToTarget());
-        }
+        // if(this.dockColumnTarget != DockColumns.NONE){
+        //     autoAlign.autoAlignToTarget(this.getIntDockCol(dockColumnTarget));
+        //     SmartDashboard.putBoolean("Superstructure/aligning-to-target", this.dockColumnTarget != DockColumns.NONE);
+        //     SmartDashboard.putBoolean("Superstructure/aligned-to-target", autoAlign.alignedToTarget());
+        // }
         // SmartDashboard.putData("Superstructure/current-state", (Sendable)currentState);
     }
 
+    public Superstructure(){
+        AutoLogOutputManager.addObject(this);
+    }
     public static Superstructure getInstance(){
         if(instance == null) instance = new Superstructure();
         return instance;

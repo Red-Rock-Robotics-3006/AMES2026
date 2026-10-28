@@ -1,6 +1,7 @@
 package frc.robot.subsystems.vision;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
@@ -27,6 +28,7 @@ public class Camera extends SubsystemBase{
     private PhotonCamera cam;
     private PhotonPipelineResult result;
     private PhotonTrackedTarget target;
+    private Pose2d visionPos;
     private Pose2d robotPos;
     private int[] validTags = {4, 8};
     private Transform3d robotToCamera;
@@ -63,16 +65,18 @@ public class Camera extends SubsystemBase{
     private double latestResultTimeStamp = 0;
     private SmartDashboardNumber oldThreshold = new SmartDashboardNumber("Camera/target-too-old-threshold", 0.25);
 
+    private Supplier<Rotation2d> gyroAngle;
 
     private SmartDashboardNumber maxAmbiguity = new SmartDashboardNumber("Camera/max-ambiguity", 0.2);
-    private SmartDashboardNumber maxDistFromTag = new SmartDashboardNumber("Camera/max-distance-from-tag", 1.524); //5 feet in meters
+    // private SmartDashboardNumber maxDistFromTag = new SmartDashboardNumber("Camera/max-distance-from-tag", 1.524); //5 feet in meters
    
     private SmartDashboardBoolean isRedAlliance = new SmartDashboardBoolean("Camera/is-red-alliance", true);
 
 
-    public Camera(String camName, double x, double y, double z, double roll, double pitch, double yaw){
-        super("Camera");
+    public Camera(String camName, Supplier<Rotation2d> gyroAngle, double x, double y, double z, double roll, double pitch, double yaw){
+        super("Camera: " + camName);
 
+        this.gyroAngle = gyroAngle;
 
         cam = new PhotonCamera(camName);
         List<PhotonPipelineResult> unreadResults = cam.getAllUnreadResults();
@@ -100,7 +104,7 @@ public class Camera extends SubsystemBase{
     public Transform3d getValidTagMeasurements(){
         if(target == null || distToTag == null) return null;
         if((target.getFiducialId() == validTags[0] || target.getFiducialId() == validTags[1])){
-            if(target.getPoseAmbiguity() < this.maxAmbiguity.getNumber() && distToTag <= maxDistFromTag.getNumber()){
+            if(target.getPoseAmbiguity() < this.maxAmbiguity.getNumber()){
                 return target.getBestCameraToTarget();
             }
         }
@@ -111,12 +115,16 @@ public class Camera extends SubsystemBase{
     //0-3, 0 left, 1 left-middle, 2 right-middle, 3 right
     public Double getDistToTarget(int targetCol){
         if(robotPos == null) return null;
-        return isRedAlliance.getValue()? PhotonUtils.getDistanceToPose(robotPos, redDockTargets[targetCol]): PhotonUtils.getDistanceToPose(robotPos, blueDockTargets[targetCol]);
+        return isRedAlliance.getValue()
+            ? PhotonUtils.getDistanceToPose(robotPos, redDockTargets[targetCol])
+            : PhotonUtils.getDistanceToPose(robotPos, blueDockTargets[targetCol]);
     }
    
     public Rotation2d getYawToTarget(int target){
         if(robotPos == null) return null;
-        return isRedAlliance.getValue()? PhotonUtils.getYawToPose(robotPos, redDockTargets[target]): PhotonUtils.getYawToPose(robotPos, blueDockTargets[target]);
+        return isRedAlliance.getValue()
+            ? PhotonUtils.getYawToPose(robotPos, redDockTargets[target])
+            : PhotonUtils.getYawToPose(robotPos, blueDockTargets[target]);
     }
 
 
@@ -139,12 +147,14 @@ public class Camera extends SubsystemBase{
             result = unreadResults.get(unreadResults.size() -1);
             latestResultTimeStamp = result.getTimestampSeconds();
             target = result.hasTargets()? result.getBestTarget(): null;
-            SmartDashboard.putNumber("Camera/targetTag/-pitch", target.getPitch());
-            SmartDashboard.putNumber("Camera/targetTag/-area", target.getArea());
-            SmartDashboard.putNumber("Camera/targetTag/-ambiguity", target.getPoseAmbiguity());
-            SmartDashboard.putNumber("Camera/targetTag/-yaw", target.getYaw());
-            SmartDashboard.putNumber("Camera/targetTag/-skew", target.getSkew());
-            SmartDashboard.putNumber("Camera/targetTag/-fiducial-id", target.getFiducialId());
+            if(target != null){
+                SmartDashboard.putNumber("Camera/targetTag/-pitch", target.getPitch());
+                SmartDashboard.putNumber("Camera/targetTag/-area", target.getArea());
+                SmartDashboard.putNumber("Camera/targetTag/-ambiguity", target.getPoseAmbiguity());
+                SmartDashboard.putNumber("Camera/targetTag/-yaw", target.getYaw());
+                SmartDashboard.putNumber("Camera/targetTag/-skew", target.getSkew());
+                SmartDashboard.putNumber("Camera/targetTag/-fiducial-id", target.getFiducialId());
+            }
         }
        
         //checks if target tag measurement is too old
@@ -153,47 +163,21 @@ public class Camera extends SubsystemBase{
        
         SmartDashboard.putBoolean("Camera/camera-latest-result", target != null);
 
-
-        if(this.getValidTagMeasurements() != null){
-            if(target.getFiducialId() == validTags[0])
-                distToTag = PhotonUtils.calculateDistanceToTargetMeters(
-                    robotToCamera.getTranslation().getZ(),
-                    tagPose3ds[0].getTranslation().getZ(),
-                    robotToCamera.getRotation().getY(), //don't know if it should be a inverse eg comeraToRobot or robotToCamera
-                    Units.degreesToRadians(target.getPitch())
-                );
-            else if(target.getFiducialId() == validTags[1]){
-                distToTag = PhotonUtils.calculateDistanceToTargetMeters(
-                    robotToCamera.getTranslation().getZ(),
-                    tagPose3ds[1].getTranslation().getZ(),
-                    robotToCamera.getRotation().getY(),
-                    Units.degreesToRadians(target.getPitch())
-                );  
-            }
+        distToTag  = target == null? null: target.getBestCameraToTarget().getTranslation().getNorm();
+        
+        Transform3d validTagMeasures = this.getValidTagMeasurements();
+        if(validTagMeasures != null){
+            int idx = target.getFiducialId() == validTags[0]? 0: 1;
+            visionPos = PhotonUtils.estimateFieldToRobotAprilTag(
+                validTagMeasures, 
+                tagPose3ds[idx], 
+                robotToCamera.inverse()
+            ).toPose2d();
         }
         else{
-            distToTag = null;
+            visionPos = null;
         }
-
-
-        if(this.getValidTagMeasurements() != null){
-            if(target.getFiducialId() == validTags[0]){
-                robotPos = PhotonUtils.estimateFieldToRobotAprilTag(
-                    this.getValidTagMeasurements(),
-                    tagPose3ds[0],
-                    robotToCamera
-                ).toPose2d();
-            }
-            else if(target.getFiducialId() == validTags[1]){
-                robotPos = PhotonUtils.estimateFieldToRobotAprilTag(
-                    this.getValidTagMeasurements(),
-                    tagPose3ds[1],
-                    robotToCamera
-                ).toPose2d();  
-            }
-        }
-        else{
-            robotPos = null;
-        }
+        
+        robotPos = visionPos != null? new Pose2d(visionPos.getTranslation(), gyroAngle.get()): null;
     }
 }
