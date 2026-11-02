@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.PIDCommand;
 import edu.wpi.first.wpilibj2.command.ProfiledPIDCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
+import frc.robot.subsystems.drivetrain.CommandSwerveDrivetrain;
 import frc.robot.subsystems.vision.Camera;
 import redrocklib.logging.SmartDashboardNumber;
 
@@ -56,15 +57,15 @@ public class AutoAlign extends SubsystemBase{
     }
 
     //Request builders, use PID and clamp to max translation and rotation speeds.
-    private double yRequest(double distY){
+    private double getYPID(double distY){
         return MathUtil.clamp(pidY.calculate(0,distY), -this.maxTranslationSpeed.getNumber(),this.maxTranslationSpeed.getNumber());
     }
     
-    private double xRequest(double distX){
+    private double getXPID(double distX){
         return MathUtil.clamp(pidX.calculate(0,distX), -this.maxTranslationSpeed.getNumber(),this.maxTranslationSpeed.getNumber());
     }
     
-    private double angleRequest(double distTheta){
+    private double getAnglePID(double distTheta){
         return MathUtil.clamp(pidTheta.calculate(0,distTheta), -this.maxRotationSpeed.getNumber(),this.maxRotationSpeed.getNumber());
     }
 
@@ -74,9 +75,9 @@ public class AutoAlign extends SubsystemBase{
         if(this.relativePose2d == null) return;
         
         csd.setControl(swerveRequest.
-                        withVelocityX(xRequest(this.relativePose2d.getX())).
-                        withVelocityY(yRequest(this.relativePose2d.getY())).
-                        withRotationalRate(angleRequest(this.relativePose2d.getRotation().getRadians())));
+                        withVelocityX(getXPID(this.relativePose2d.getX())).
+                        withVelocityY(getYPID(this.relativePose2d.getY())).
+                        withRotationalRate(getAnglePID(this.relativePose2d.getRotation().getRadians())));
 
     }
 
@@ -106,13 +107,13 @@ public class AutoAlign extends SubsystemBase{
         csd.setControl(swerveRequest.
                         withVelocityX(0).
                         withVelocityY(0).
-                        withRotationalRate(angleRequest(this.relativePose2d.getRotation().getRadians())));
+                        withRotationalRate(getAnglePID(this.relativePose2d.getRotation().getRadians())));
     }
 
     public boolean alignedToTarget() {
-        return (this.relativePose2d.getX() < this.translationThreshold.getNumber()) &&
-               (this.relativePose2d.getY() < this.translationThreshold.getNumber()) &&
-               (this.relativePose2d.getRotation().getRadians() < this.rotationThreshold.getNumber()); 
+        return (Math.abs(this.relativePose2d.getX()) < this.translationThreshold.getNumber()) &&
+               (Math.abs(this.relativePose2d.getY()) < this.translationThreshold.getNumber()) &&
+               (Math.abs(this.relativePose2d.getRotation().getRadians()) < this.rotationThreshold.getNumber()); 
     }
 
     public boolean alignedToTargetAngleOnly() {

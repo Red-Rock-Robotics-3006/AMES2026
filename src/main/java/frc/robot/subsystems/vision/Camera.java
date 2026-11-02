@@ -140,6 +140,10 @@ public class Camera extends SubsystemBase{
         return this.robotToCamera;
     }
 
+    public double getLatestTimeStamp(){
+        return this.latestResultTimeStamp;
+    }
+
     @Override
     public void periodic(){
         List<PhotonPipelineResult> unreadResults = cam.getAllUnreadResults();

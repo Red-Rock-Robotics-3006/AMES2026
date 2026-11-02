@@ -22,7 +22,7 @@ public class EndEffector extends SubsystemBase{
 
     private final Superstructure superstructure = new Superstructure();
 
-    private final RedRockTalon endEffectMotor = new RedRockTalon(0, "EndEffector/endEffectMotor"); //TODO
+    private final RedRockTalon endEffectMotor = new RedRockTalon(31, "EndEffector/endEffectMotor"); //TODO
 
     //Thresholds and Limits
     SmartDashboardNumber velocityThreshold = new SmartDashboardNumber("EndEffector/velocityThreshold", 70);

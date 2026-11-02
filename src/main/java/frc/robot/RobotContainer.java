@@ -15,15 +15,17 @@ import frc.robot.Superstructure.RobotState;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.EndEffectorPrototype;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.drivetrain.CommandSwerveDrivetrain;
+import redrocklib.logging.SmartDashboardNumber;
 
 import com.ctre.phoenix6.signals.RobotEnableValue;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 
 public class RobotContainer {
-  private final static CommandXboxController testStick = new CommandXboxController(0);
+  private final static CommandXboxController testStick = new CommandXboxController(3);
   public final static CommandXboxController driveStick = new CommandXboxController(0);
-  public final static CommandXboxController mechStick = new CommandXboxController(0);
+  public final static CommandXboxController mechStick = new CommandXboxController(1);
   
   private final CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
   private final EndEffectorPrototype endEffectorPrototype = new EndEffectorPrototype();
@@ -31,7 +33,9 @@ public class RobotContainer {
   private final Intake intake = new Intake();
   private final EndEffector endEffector = EndEffector.getInstance();
   private final Odometry odometry = Odometry.getInstance();
-  private final SwerveRequest.FieldCentric csdRequest = new SwerveRequest.FieldCentric();
+  private final SwerveRequest.FieldCentric csdRequest = new SwerveRequest.FieldCentric().withDeadband(0.1);
+  private SmartDashboardNumber maxTranslationProportion = new SmartDashboardNumber("CommandSwerveDrivetrain/maxTranslationProportion", 0.70);
+  private SmartDashboardNumber maxRotationProportion = new SmartDashboardNumber("CommandSwerveDrivetrain/maxRotationProportion", 0.70);
   
   public RobotContainer() {
     // configureTestBindings();
@@ -39,23 +43,28 @@ public class RobotContainer {
   }
   
   private void configureBindings(){
-    // driveStick.rightStick().onTrue(csd.seedFieldCentric());
+    csd.setDefaultCommand(csd.applyRequest(() -> csdRequest.withVelocityX(-driveStick.getLeftY()*maxTranslationProportion.getNumber())
+    													   .withVelocityY(-driveStick.getLeftX()*maxTranslationProportion.getNumber())
+														   .withRotationalRate(-driveStick.getRightX()*maxRotationProportion.getNumber())));
+    
+    driveStick.rightStick().onTrue(Commands.runOnce(() ->csd.seedFieldCentric()));
 
-    //Drivestick bindings
-	if(odometry.get2dDistToTargetAllCams(superstructure.getIntDockCol(superstructure.getDockColumn())) <= 5){
-		driveStick.leftTrigger(0.25) //Shoots with lerp
-			.onTrue(superstructure.endEffectCommand())
-			.onFalse(endEffector.stopEndEffectorCommand());
-	}
-	driveStick.rightTrigger(0.25)
-		.onTrue(Commands.sequence(
-			endEffector.intakeCommand(), 
-			intake.startIntakeCommand())
-		)
-		.onFalse(intake.stopIntakeCommand());
-	driveStick.rightBumper()
-		.onTrue(endEffector.outakeCommand())
-		.onFalse(endEffector.stopEndEffectorCommand());
+    // Drivestick bindings
+    driveStick.leftTrigger(0.25) //Shoots with lerp
+      .onTrue(
+        superstructure.endEffectCommand()
+          .onlyIf(() -> odometry.get2dDistToTargetAllCams(superstructure.getIntDockCol(superstructure.getDockColumn())) <= 5))
+      .onFalse(endEffector.stopEndEffectorCommand());
+    
+    driveStick.rightTrigger(0.25)
+      .onTrue(Commands.sequence(
+        endEffector.intakeCommand(), 
+        intake.startIntakeCommand())
+      )
+      .onFalse(intake.stopIntakeCommand());
+    driveStick.rightBumper()
+      .onTrue(endEffector.outakeCommand())
+      .onFalse(endEffector.stopEndEffectorCommand());
 
     //Set which column of dock targets to target when auto aligning
     mechStick.povCenter()
@@ -89,30 +98,24 @@ public class RobotContainer {
 	    .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SHELF), superstructure))
 		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
 
-	mechStick.leftTrigger(0.25) 
-		.onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SOURCE_SHELL), superstructure))
-		.onFalse(
-			Commands.sequence(
-				Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTERMEDIATE), superstructure),
-				Commands.runOnce(() -> endEffector.stopEndEffectorCommand(), endEffector)
-			)   
-		);
-	mechStick.rightTrigger(0.25) 
-		.onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SOURCE_CELL), superstructure))
-		.onFalse(
-			Commands.sequence(
-				Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTERMEDIATE), superstructure),
-				Commands.runOnce(() -> endEffector.stopEndEffectorCommand(), endEffector)
-			)   
-		);  
+    mechStick.leftTrigger(0.25) 
+      .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SOURCE_SHELL), superstructure))
+      .onFalse(
+        Commands.sequence(
+          Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTERMEDIATE), superstructure),
+          Commands.runOnce(() -> endEffector.stopEndEffectorCommand(), endEffector)
+        )   
+      );
+    mechStick.rightTrigger(0.25) 
+      .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SOURCE_CELL), superstructure))
+      .onFalse(
+        Commands.sequence(
+          Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTERMEDIATE), superstructure),
+          Commands.runOnce(() -> endEffector.stopEndEffectorCommand(), endEffector)
+        )   
+      );  
 	}
 
-
-
-
-
-
-  
   private void configureTestBindings(){
     testStick.y()
       .onTrue(endEffectorPrototype.increaseEndEffectorSpeedTestCommand())

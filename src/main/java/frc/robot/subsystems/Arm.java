@@ -33,8 +33,8 @@ public class Arm extends SubsystemBase{
 
     private final Superstructure superstructure= new Superstructure();
 
-    private final RedRockTalon pivotMotor = new RedRockTalon(0, "Arm/pivot-motor", "*");
-    private final CANcoder encoder = new CANcoder(0, "*");
+    private final RedRockTalon pivotMotor = new RedRockTalon(21, "Arm/pivot-motor", "*");
+    private final CANcoder encoder = new CANcoder(25, "*");
 
 
     //CANCoder values

@@ -73,7 +73,7 @@ public class Superstructure extends SubsystemBase{
     SmartDashboardNumber scoreShelfVel = new SmartDashboardNumber("EndEffector/scoreShelfVel", 0);//TODO
     SmartDashboardNumber intakeCellSourceVel = new SmartDashboardNumber("EndEffector/intakeCellSourceVel", 0);//TODO
     SmartDashboardNumber intakeShellSourceVel = new SmartDashboardNumber("EndEffector/intakeShellSourceVel", 0);//TODO
-
+    SmartDashboardNumber armMovingSpeed = new SmartDashboardNumber("EndEffector/armMovingSpeed", -.1);
 
     //LERP disable velocities
     SmartDashboardNumber staticL1Vel = new SmartDashboardNumber("EndEffector/staticL1Vel", 0);//TODO
