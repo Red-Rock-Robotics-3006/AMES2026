@@ -6,12 +6,14 @@ package frc.robot;
 
 // import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Superstructure.DockColumns;
 import frc.robot.subsystems.vision.Odometry;
 import frc.robot.Superstructure.RobotState;
+import frc.robot.subsystems.Autos;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.EndEffectorPrototype;
 import frc.robot.subsystems.Intake;
@@ -20,6 +22,8 @@ import redrocklib.logging.SmartDashboardNumber;
 
 import com.ctre.phoenix6.signals.RobotEnableValue;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+
+import choreo.auto.AutoFactory;
 
 
 public class RobotContainer {
@@ -37,6 +41,10 @@ public class RobotContainer {
   private SmartDashboardNumber maxTranslationProportion = new SmartDashboardNumber("CommandSwerveDrivetrain/maxTranslationProportion", 0.70);
   private SmartDashboardNumber maxRotationProportion = new SmartDashboardNumber("CommandSwerveDrivetrain/maxRotationProportion", 0.70);
   
+  // private final AutoFactory autoFactory;
+  // private final Autos autos;
+  // private SendableChooser<Command> chooser = new SendableChooser<>();
+
   public RobotContainer() {
     // configureTestBindings();
     configureBindings();

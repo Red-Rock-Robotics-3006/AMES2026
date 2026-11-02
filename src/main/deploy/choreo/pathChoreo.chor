@@ -1,5 +1,5 @@
 {
- "name":"basicAuto",
+ "name":"pathChoreo",
  "version":2,
  "type":"Swerve",
  "variables":{
@@ -76,7 +76,7 @@
  },
  "generationFeatures":[],
  "codegen":{
-  "root":"..\\..\\..\\..\\AMES2026-1\\src\\main\\deploy\\choreo",
+  "root":"",
   "genVars":true,
   "genTrajData":true,
   "useChoreoLib":true

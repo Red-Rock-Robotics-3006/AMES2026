@@ -236,6 +236,12 @@ public class Superstructure extends SubsystemBase{
             }
     }
 
+    public boolean atWantedArmPosSuperstructure(){
+        return RobotState.L1 == wantedState || RobotState.L2 == wantedState || RobotState.L3 == wantedState
+            ? arm.atWantedArmPos(stateToArmPos(wantedState, distanceFromTarget))
+            : arm.atWantedArmPos(stateToArmPosStatic(wantedState));
+    }
+
     public Command endEffectCommand(){
         return Commands.runOnce(() -> this.endEffector.shootCommand(stateToVelocity(this.wantedState, this.distanceFromTarget)), endEffector);
     }
@@ -299,6 +305,9 @@ public class Superstructure extends SubsystemBase{
         );
     }
 
+    public Command intakeEndEffectCommand(){
+        return endEffector.intakeCommand();
+    }
     
     //since cases are very similar let similar cases fall through to the next, it will end at the break
     private void goToWantedState(){
