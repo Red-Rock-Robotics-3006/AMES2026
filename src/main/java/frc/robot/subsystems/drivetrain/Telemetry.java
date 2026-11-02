@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 
 public class Telemetry {
+    private static Telemetry instance = null;
     private final double MaxSpeed;
 
     /**
@@ -118,5 +119,14 @@ public class Telemetry {
             m_moduleDirections[i].setAngle(state.ModuleStates[i].angle);
             m_moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * MaxSpeed));
         }
+    }
+
+    public StructArrayPublisher<SwerveModulePosition> getModulePoses(){
+        return this.driveModulePositions;
+    }
+
+    public static Telemetry getInstance(){
+        if(instance == null) instance = new Telemetry(0);
+        return instance;
     }
 }
