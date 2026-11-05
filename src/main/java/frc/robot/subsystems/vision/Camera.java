@@ -113,14 +113,14 @@ public class Camera extends SubsystemBase{
 
 
     //0-3, 0 left, 1 left-middle, 2 right-middle, 3 right
-    public Double getDistToTarget(int targetCol){
+    public Double getDistToTarget(int targetCol){ //returns distance in meters
         if(robotPos == null) return null;
         return isRedAlliance.getValue()
             ? PhotonUtils.getDistanceToPose(robotPos, redDockTargets[targetCol])
             : PhotonUtils.getDistanceToPose(robotPos, blueDockTargets[targetCol]);
     }
    
-    public Rotation2d getYawToTarget(int target){
+    public Rotation2d getYawToTarget(int target){ //returns yaw in degrees
         if(robotPos == null) return null;
         return isRedAlliance.getValue()
             ? PhotonUtils.getYawToPose(robotPos, redDockTargets[target])

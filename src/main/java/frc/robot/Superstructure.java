@@ -38,8 +38,8 @@ public class Superstructure extends SubsystemBase{
 
     
     
-    private RobotState wantedState = RobotState.INTERMEDIATE;
-    private RobotState currentState = RobotState.INTERMEDIATE;
+    private RobotState wantedState = RobotState.STOW;
+    private RobotState currentState = RobotState.STOW;
 
     
     private EndEffector endEffector = EndEffector.getInstance();
@@ -273,10 +273,17 @@ public class Superstructure extends SubsystemBase{
     }
     
     //Arm commands
+    //when arm is moving endeffector slowly pushes piece out so compensate with low reversing  speed
+    private Command goToStaticPosCommand(double pos){
+        return Commands.run(
+            () -> endEffector.setSpeed(arm.getPivotVelocity()*(3.0/64.0))
+        ).deadlineFor(Commands.runOnce(() -> arm.armToPos(pos), arm));
+    }
+
     private Command goToArmPosStaticCommand(RobotState state){
         return new FunctionalCommand( 
             () -> this.setWantedRobotState(state),
-            () -> arm.goToStaticPosCommand(this.stateToArmPosStatic(wantedState)),
+            () -> this.goToStaticPosCommand(this.stateToArmPosStatic(wantedState)),
             (interrupted) -> this.setCurrentRobotState(state),
             () -> {
                 return arm.atWantedArmPos(this.stateToArmPosStatic(wantedState));
@@ -288,7 +295,7 @@ public class Superstructure extends SubsystemBase{
     private Command goToArmPosCommand(RobotState state, double dist){
         return new FunctionalCommand( 
             () -> this.setWantedRobotState(state),
-            () -> arm.goToStaticPosCommand(this.stateToArmPos(wantedState, dist)),
+            () -> this.goToStaticPosCommand(this.stateToArmPos(wantedState, dist)),
             (interrupted) -> this.setCurrentRobotState(state),
             () -> {
                 return arm.atWantedArmPos(this.stateToArmPosStatic(wantedState));
@@ -308,7 +315,7 @@ public class Superstructure extends SubsystemBase{
     public Command intakeEndEffectCommand(){
         return endEffector.intakeCommand();
     }
-    
+
     //since cases are very similar let similar cases fall through to the next, it will end at the break
     private void goToWantedState(){
         switch(this.wantedState){
@@ -351,7 +358,9 @@ public class Superstructure extends SubsystemBase{
     @Override
     public void periodic(){
         distanceFromTarget = dockColumnTarget!=DockColumns.NONE?odometry.get2dDistToTargetAllCams(this.getIntDockCol(dockColumnTarget)):-1;
-        this.goToWantedState();
+        if(wantedState != currentState){
+            this.goToWantedState();
+        }
 
         SmartDashboard.putBoolean("Arm/at-wanted-pos", arm.atWantedArmPos(distanceFromTarget)); //TODO add distance from peg board when have odometry
         Logger.recordOutput("Arm/at-wanted-pos", arm.atWantedArmPos(distanceFromTarget)); //TODO add distance from peg board when have odometry

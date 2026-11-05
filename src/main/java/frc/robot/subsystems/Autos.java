@@ -13,11 +13,10 @@ import redrocklib.logging.SmartDashboardNumber;
 
 
 public class Autos {
-
+    private static Autos instance = null;
 
     private final Superstructure superstructure = Superstructure.getInstance();
     private final CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
-
 
     private final AutoFactory factory;
 
@@ -95,5 +94,10 @@ public class Autos {
                 superstructure.endEffectCommand()
             )
         );
+    }
+
+    public static Autos getInstance(AutoFactory f){
+        if(instance == null) instance = new Autos(f);
+        return instance;
     }
 }

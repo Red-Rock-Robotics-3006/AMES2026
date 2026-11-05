@@ -69,8 +69,7 @@ public class Odometry extends SubsystemBase{
         Supplier<Rotation2d> gyrRotation = () -> csd.getState().Pose.getRotation();
         cameras.add(new Camera("Name1", gyrRotation, 0, 0, 0, 0, 0, 0)); //TODO name and add vals to cams
         cameras.add(new Camera("Name2", gyrRotation, 0, 0, 0, 0, 0, 0));
-        cameras.add(new Camera("Name3", gyrRotation, 0, 0, 0, 0, 0, 0));
-        cameras.add(new Camera("Name4", gyrRotation, 0, 0, 0, 0, 0, 0));
+    
     
         // for(int i = 0; i < cameras.size(); i++){
         //     photonPoseEstimators[i] = new PhotonPoseEstimator(field, PoseStrategy.PNP_DISTANCE_TRIG_SOLVE, cameras.get(i).getRobotToCamera());

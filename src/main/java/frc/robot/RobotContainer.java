@@ -15,7 +15,7 @@ import frc.robot.subsystems.vision.Odometry;
 import frc.robot.Superstructure.RobotState;
 import frc.robot.subsystems.Autos;
 import frc.robot.subsystems.EndEffector;
-import frc.robot.subsystems.EndEffectorPrototype;
+// import frc.robot.subsystems.EndEffectorPrototype;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.drivetrain.CommandSwerveDrivetrain;
 import redrocklib.logging.SmartDashboardNumber;
@@ -32,22 +32,32 @@ public class RobotContainer {
   public final static CommandXboxController mechStick = new CommandXboxController(1);
   
   private final CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
-  private final EndEffectorPrototype endEffectorPrototype = new EndEffectorPrototype();
+  // private final EndEffectorPrototype endEffectorPrototype = EndEffectorPrototype.getInstance();
   private final Superstructure superstructure = Superstructure.getInstance();
-  private final Intake intake = new Intake();
+  private final Intake intake = Intake.getInstance();
   private final EndEffector endEffector = EndEffector.getInstance();
   private final Odometry odometry = Odometry.getInstance();
   private final SwerveRequest.FieldCentric csdRequest = new SwerveRequest.FieldCentric().withDeadband(0.1);
+  // private final Autos auto = new Auto();
   private SmartDashboardNumber maxTranslationProportion = new SmartDashboardNumber("CommandSwerveDrivetrain/maxTranslationProportion", 0.70);
   private SmartDashboardNumber maxRotationProportion = new SmartDashboardNumber("CommandSwerveDrivetrain/maxRotationProportion", 0.70);
   
+  
   // private final AutoFactory autoFactory;
   // private final Autos autos;
-  // private SendableChooser<Command> chooser = new SendableChooser<>();
+  private SendableChooser<Command> chooser = new SendableChooser<>();
 
   public RobotContainer() {
     // configureTestBindings();
     configureBindings();
+
+    // autoFactory = new AutoFactory(
+    //   () -> csd.getState().Pose, 
+    //   pos -> csd.resetPose(pos), 
+    //   , 
+    //   true, 
+    //   csd
+    // );
   }
   
   private void configureBindings(){
@@ -78,34 +88,40 @@ public class RobotContainer {
     mechStick.povCenter()
       	.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE)));
     mechStick.povUp()
-		.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.LEFT), superstructure))
-		.onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
+      .onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.LEFT), superstructure))
+      .onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
 
     mechStick.povLeft()
-		.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.LEFT_MID), superstructure))
-		.onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
+      .onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.LEFT_MID), superstructure))
+      .onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
 
     mechStick.povRight()
-		.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.RIGHT_MID), superstructure))
-		.onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
+      .onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.RIGHT_MID), superstructure))
+      .onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
     mechStick.povDown()
-		.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.RIGHT), superstructure))
-		.onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
+      .onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.RIGHT), superstructure))
+      .onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
 
 	//x=L1, y=L2, b=L3, a=shelf
     mechStick.x()
-		.onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.L1), superstructure))
-		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
+      .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.L1), superstructure))
+      .onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
     mechStick.y()
-		.onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.L2), superstructure))
-		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
+      .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.L2), superstructure))
+      .onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
     mechStick.b()
 	    .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.L3), superstructure))
-		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
+      .onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
     mechStick.a()
 	    .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SHELF), superstructure))
-		.onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
-
+      .onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
+    mechStick.rightBumper()
+	    .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_CELL), superstructure))
+      .onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTERMEDIATE), superstructure));
+    mechStick.leftBumper()
+	    .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure))
+      .onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTERMEDIATE), superstructure));
+    
     mechStick.leftTrigger(0.25) 
       .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SOURCE_SHELL), superstructure))
       .onFalse(
@@ -125,20 +141,20 @@ public class RobotContainer {
 	}
 
   private void configureTestBindings(){
-    testStick.y()
-      .onTrue(endEffectorPrototype.increaseEndEffectorSpeedTestCommand())
-      .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
+    // testStick.y()
+    //   .onTrue(endEffectorPrototype.increaseEndEffectorSpeedTestCommand())
+    //   .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
 
-    testStick.a()
-      .onTrue(endEffectorPrototype.decreaseEndEffectorSpeedTestCommand())
-      .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
-    testStick.x()
-      .onTrue(endEffectorPrototype.startEndEffectorTestReverseCommand())
-      .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
+    // testStick.a()
+    //   .onTrue(endEffectorPrototype.decreaseEndEffectorSpeedTestCommand())
+    //   .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
+    // testStick.x()
+    //   .onTrue(endEffectorPrototype.startEndEffectorTestReverseCommand())
+    //   .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
 
-    testStick.b()
-      .onTrue(endEffectorPrototype.startEndEffectorTestCommand())
-      .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
+    // testStick.b()
+    //   .onTrue(endEffectorPrototype.startEndEffectorTestCommand())
+    //   .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
 
       
     testStick.rightTrigger()

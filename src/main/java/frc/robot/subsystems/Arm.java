@@ -31,17 +31,18 @@ import redrocklib.wrappers.RedRockTalon;
 public class Arm extends SubsystemBase{
     private static Arm instance = null;
 
+    private static EndEffector endeffector = EndEffector.getInstance();
     private final Superstructure superstructure= new Superstructure();
 
     private final RedRockTalon pivotMotor = new RedRockTalon(21, "Arm/pivot-motor", "*");
-    private final CANcoder encoder = new CANcoder(25, "*");
+    // private final CANcoder encoder = new CANcoder(25, "*");
 
 
     //CANCoder values
-    private SmartDashboardNumber kRotorToSensorRatio = new SmartDashboardNumber("Arm/CANCoder/k-rotor-to-sensor-ratio", 0); //TODO
-    private SmartDashboardNumber kSensorToMechRatio = new SmartDashboardNumber("Arm/CANCoder/k-sensor-to-mech-ratio", 0); //TODO
-    private SmartDashboardNumber kDiscontinuityPoint = new SmartDashboardNumber("Arm/CANCoder/k-discontinuity-point", 0.5); //TODO gives range of rotation, so 0.7 would be -0.3, 0.7, 1 would be 0, 1 etc
-    private SmartDashboardNumber kCANCoderOffset = new SmartDashboardNumber("Arm/CANCoder/k-cancoder-offset", 0); //TODO gives range of rotation, so 0.7 would be -0.3, 0.7, 1 would be 0, 1 etc
+    // private SmartDashboardNumber kRotorToSensorRatio = new SmartDashboardNumber("Arm/CANCoder/k-rotor-to-sensor-ratio", 0); //TODO
+    // private SmartDashboardNumber kSensorToMechRatio = new SmartDashboardNumber("Arm/CANCoder/k-sensor-to-mech-ratio", 0); //TODO
+    // private SmartDashboardNumber kDiscontinuityPoint = new SmartDashboardNumber("Arm/CANCoder/k-discontinuity-point", 0.5); //TODO gives range of rotation, so 0.7 would be -0.3, 0.7, 1 would be 0, 1 etc
+    // private SmartDashboardNumber kCANCoderOffset = new SmartDashboardNumber("Arm/CANCoder/k-cancoder-offset", 0); //TODO gives range of rotation, so 0.7 would be -0.3, 0.7, 1 would be 0, 1 etc
 
     //Limits and Thresholds
     private SmartDashboardNumber minArmPos = new SmartDashboardNumber("Arm/Positions/min", 0); //TODO
@@ -57,18 +58,18 @@ public class Arm extends SubsystemBase{
         super("Arm");
 
         AutoLogOutputManager.addObject(this);
-        FeedbackConfigs feedbackConfigs = new FeedbackConfigs()
-        .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
-        .withFeedbackRemoteSensorID(encoder.getDeviceID())
-        .withRotorToSensorRatio(kRotorToSensorRatio.getNumber()) //How many motor rotations are there for every rotation of the CANCoder?
-        .withSensorToMechanismRatio(kSensorToMechRatio.getNumber()); //How many CANCoder rotations are there to each mechanism rotation
+        // FeedbackConfigs feedbackConfigs = new FeedbackConfigs()
+        // .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
+        // .withFeedbackRemoteSensorID(encoder.getDeviceID())
+        // .withRotorToSensorRatio(kRotorToSensorRatio.getNumber()) //How many motor rotations are there for every rotation of the CANCoder?
+        // .withSensorToMechanismRatio(kSensorToMechRatio.getNumber()); //How many CANCoder rotations are there to each mechanism rotation
 
-        this.encoder.getConfigurator().apply(
-            new MagnetSensorConfigs()
-            .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
-            .withAbsoluteSensorDiscontinuityPoint(kDiscontinuityPoint.getNumber())
-            .withMagnetOffset(kCANCoderOffset.getNumber())
-        );
+        // this.encoder.getConfigurator().apply(
+        //     new MagnetSensorConfigs()
+        //     .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
+        //     .withAbsoluteSensorDiscontinuityPoint(kDiscontinuityPoint.getNumber())
+        //     .withMagnetOffset(kCANCoderOffset.getNumber())
+        // );
 
         this.pivotMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
@@ -101,7 +102,7 @@ public class Arm extends SubsystemBase{
             .withStatorCurrentLimitEnable(true)
         ).withTuningEnabled(true);
 
-        this.pivotMotor.motor.getConfigurator().apply(feedbackConfigs);
+        // this.pivotMotor.motor.getConfigurator().apply(feedbackConfigs);
     }
     
     
@@ -116,14 +117,17 @@ public class Arm extends SubsystemBase{
 
     private void resetArm(){
         this.pivotMotor.motor.setControl(new VoltageOut(0));
-        this.encoder.setPosition(0);
+        this.pivotMotor.motor.setPosition(0);
     }
 
-    private void armToPos(double pos){
+    public void armToPos(double pos){
         this.pivotMotor.setMotionMagicPosition(MathUtil.clamp(pos, minArmPos.getNumber(), maxArmPos.getNumber()));
         Logger.recordOutput("Arm/desiredArmPos", pos);
     }
 
+    public double getPivotVelocity(){
+        return this.pivotMotor.motor.getVelocity().getValueAsDouble();
+    }
 
     //Testing
     private void increaseTestPos(double amount){
@@ -144,14 +148,6 @@ public class Arm extends SubsystemBase{
     }
 
     //Commands
-
-    public Command goToStaticPosCommand(double pos){// I changed the end effector intake command to a new version called intakeCommand, it takes in a velocity. will implement in the superstructure
-        return Commands.runOnce(
-            () -> armToPos(pos), 
-            this
-        );
-    }
-
 
     public Command zeroArmCommand(){
         return new FunctionalCommand(
@@ -200,14 +196,16 @@ public class Arm extends SubsystemBase{
 
         
 
-        StatusSignal<Angle> encoderPos = encoder.getPosition();
-        encoderPos.refresh();
-        SmartDashboard.putNumber("Arm/encoder/posistion-rotations", encoderPos.getValueAsDouble());
-        Logger.recordOutput("Arm/encoder/posistion-rotations", encoderPos.getValueAsDouble());
+        // StatusSignal<Angle> encoderPos = encoder.getPosition();
+        // encoderPos.refresh();
+        // SmartDashboard.putNumber("Arm/encoder/posistion-rotations", encoderPos.getValueAsDouble());
+        // Logger.recordOutput("Arm/encoder/posistion-rotations", encoderPos.getValueAsDouble());
     
         SmartDashboard.putNumber("Arm/supply-current", this.pivotMotor.motor.getSupplyCurrent().getValueAsDouble());
         Logger.recordOutput("Arm/supply-current", this.pivotMotor.motor.getSupplyCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Arm/velocity", this.pivotMotor.motor.getVelocity().getValueAsDouble());
+        Logger.recordOutput("Arm/position", this.pivotMotor.motor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Arm/velocity", this.pivotMotor.motor.getPosition().getValueAsDouble());
         Logger.recordOutput("Arm/velocity", this.pivotMotor.motor.getVelocity().getValueAsDouble());
         SmartDashboard.putNumber("Arm/acceleration", this.pivotMotor.motor.getAcceleration().getValueAsDouble());
         Logger.recordOutput("Arm/acceleration", this.pivotMotor.motor.getAcceleration().getValueAsDouble());

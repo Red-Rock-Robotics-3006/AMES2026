@@ -21,6 +21,7 @@ public class EndEffector extends SubsystemBase{
     private static EndEffector instance = null;
 
     private final Superstructure superstructure = new Superstructure();
+    private final Arm arm = Arm.getInstance();
 
     private final RedRockTalon endEffectMotor = new RedRockTalon(31, "EndEffector/endEffectMotor"); //TODO
 
@@ -28,6 +29,7 @@ public class EndEffector extends SubsystemBase{
     SmartDashboardNumber velocityThreshold = new SmartDashboardNumber("EndEffector/velocityThreshold", 70);
     SmartDashboardNumber intakeVelocity = new SmartDashboardNumber("EndEffector/intaking-velocity", -1200);
     SmartDashboardNumber outakeVelocity = new SmartDashboardNumber("EndEffector/outaking-velocity", 500);
+    SmartDashboardNumber keepPieceInSpeed = new SmartDashboardNumber("EndEffector/keep-pieces-in-end-effector-velocity", 10);
     private SmartDashboardNumber currentLimit = new SmartDashboardNumber("EndEffector/current-limit", 45);
 
     public EndEffector(){
@@ -65,7 +67,7 @@ public class EndEffector extends SubsystemBase{
 
 
     //Movement methods
-    private void setSpeed(double velocity){
+    public void setSpeed(double velocity){
         endEffectMotor.setMotionMagicVelocity(velocity);
     }
 
@@ -93,6 +95,20 @@ public class EndEffector extends SubsystemBase{
     public Command stopEndEffectorCommand(){
         return Commands.runOnce(
             () -> this.stop(), 
+            this
+        );
+    }
+
+    public Command keepGamePiecesInConstantCommand(){
+        return Commands.runOnce(
+            () -> this.setSpeed(this.keepPieceInSpeed.getNumber()), 
+            this
+        );
+    }
+
+    public Command keepGamePiecesInCommand(){
+        return Commands.runOnce(
+            () -> this.setSpeed(arm.getPivotVelocity()*(3.0/64.0)), 
             this
         );
     }
