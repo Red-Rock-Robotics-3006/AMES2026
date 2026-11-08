@@ -1,7 +1,9 @@
 package frc.robot.subsystems;
 
 
+import choreo.Choreo;
 import choreo.auto.AutoFactory;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -18,21 +20,22 @@ public class Autos {
     private final Superstructure superstructure = Superstructure.getInstance();
     private final CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
 
-    private final AutoFactory factory;
+    // private final AutoFactory factory;
 
 
     private SmartDashboardNumber waitShootSec = new SmartDashboardNumber("Autos/shoot-wait", 2);
 
 
-    public Autos(AutoFactory factory){
-        this.factory = factory;
-    }
+    // public Autos(){
+    //     this.factory = factory;
+    // }
 
     //Moves 5 feet at 1 m/s
     public Command testSlowAuto(){
-        return Commands.sequence(
-            factory.trajectoryCmd("testSlow", 0)
-        );
+        return 
+            Commands.sequence(
+                csd.followTrajectoryCmd("testSlow")
+            );
     }
 
     //Blue Side starts bottom corner shoots preloaded shell L3, source intakes shell and shoots it again L2
@@ -40,7 +43,7 @@ public class Autos {
         return Commands.sequence(
             Commands.parallel(
                 Commands.runOnce(() ->superstructure.setWantedRobotState(RobotState.L3), superstructure),
-                factory.trajectoryCmd("B2Shell", 0)
+                csd.followTrajectoryCmd("B2Shell", 0)
             ),
             Commands.waitUntil(() -> superstructure.atWantedArmPosSuperstructure()),
             Commands.deadline(      //Shouldn't need autoalign auto should correctly align
@@ -49,13 +52,13 @@ public class Autos {
             ),            
             Commands.parallel(
                 Commands.runOnce(() ->superstructure.setWantedRobotState(RobotState.SOURCE_SHELL), superstructure),
-                factory.trajectoryCmd("B2Shell", 1)
+                csd.followTrajectoryCmd("B2Shell", 1)
             ),
             Commands.waitUntil(() -> superstructure.atWantedArmPosSuperstructure()),
             superstructure.intakeEndEffectCommand(),
             Commands.parallel(
                 Commands.runOnce(() ->superstructure.setWantedRobotState(RobotState.L2), superstructure),
-                factory.trajectoryCmd("B2Shell", 2)
+                csd.followTrajectoryCmd("B2Shell", 2)
             ),
             Commands.waitUntil(() -> superstructure.atWantedArmPosSuperstructure()),
             Commands.deadline(      //Shouldn't need autoalign auto should correctly align
@@ -71,7 +74,7 @@ public class Autos {
         return Commands.sequence(
             Commands.parallel(
                 Commands.runOnce(() ->superstructure.setWantedRobotState(RobotState.L3), superstructure),
-                factory.trajectoryCmd("R2Shell", 0)
+                csd.followTrajectoryCmd("R2Shell", 0)
             ),
             Commands.waitUntil(() -> superstructure.atWantedArmPosSuperstructure()),
             Commands.deadline(      //Shouldn't need autoalign auto should correctly align
@@ -80,13 +83,13 @@ public class Autos {
             ),            
             Commands.parallel(
                 Commands.runOnce(() ->superstructure.setWantedRobotState(RobotState.SOURCE_SHELL), superstructure),
-                factory.trajectoryCmd("R2Shell", 1)
+                csd.followTrajectoryCmd("R2Shell", 1)
             ),
             Commands.waitUntil(() -> superstructure.atWantedArmPosSuperstructure()),
             superstructure.intakeEndEffectCommand(),
             Commands.parallel(
                 Commands.runOnce(() ->superstructure.setWantedRobotState(RobotState.L2), superstructure),
-                factory.trajectoryCmd("R2Shell", 2)
+                csd.followTrajectoryCmd("R2Shell", 2)
             ),
             Commands.waitUntil(() -> superstructure.atWantedArmPosSuperstructure()),
             Commands.deadline(      //Shouldn't need autoalign auto should correctly align
@@ -96,8 +99,32 @@ public class Autos {
         );
     }
 
-    public static Autos getInstance(AutoFactory f){
-        if(instance == null) instance = new Autos(f);
+    public static Autos getInstance(){
+        if(instance == null) instance = new Autos();
         return instance;
     }
+
+    // public static class RedRockAuto{
+    //     private final String name;
+    //     private final Command autoRoutineCommand;
+    //     private final Pose2d initPose2d;
+
+    //     public RedRockAuto(String autoName, Command autoCommand, Pose2d initialPose){
+    //         this.name = autoName;
+    //         this.autoRoutineCommand = autoCommand;
+    //         this.initPose2d = initialPose;
+    //     }
+
+    //     public String getAutoName(){
+    //         return this.name;
+    //     }
+
+    //     public Command getAuto(){
+    //         return this.autoRoutineCommand;
+    //     }
+
+    //     public Pose2d getInitPos(){
+    //         return this.initPose2d;
+    //     }
+    // }
 }

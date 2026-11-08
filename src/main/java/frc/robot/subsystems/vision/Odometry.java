@@ -5,25 +5,12 @@ import java.util.List;
 import java.util.Vector;
 import java.util.function.Supplier;
 
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.targeting.PhotonPipelineResult;
-
-import com.ctre.phoenix6.hardware.Pigeon2;
-
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.epilogue.Logged.Strategy;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.numbers.N3; 
 import edu.wpi.first.math.numbers.N1; 
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Superstructure.DockColumns;
 import frc.robot.subsystems.drivetrain.CommandSwerveDrivetrain;
@@ -34,48 +21,19 @@ public class Odometry extends SubsystemBase{
     private static Odometry instance = null;
 
     private CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
-    private Telemetry telemetry = Telemetry.getInstance();
 
     private static ArrayList<Camera> cameras = new ArrayList<>();
-    // private final PhotonPoseEstimator[] photonPoseEstimators;
-
-    // private final SwerveDrivePoseEstimator posEstimator;
-    // private final Supplier<SwerveDriveKinematics> kinematics;
-    // private final Supplier<Rotation2d> gyRotation2d;
-    // private final Supplier<SwerveModulePosition[]> modulePositions;
-    // private static final Matrix<N3, N1> stateStdDevs  = VecBuilder.fill(0.3, 0.3, Units.degreesToRadians(2));
+   
     private static final Matrix<N3, N1> visionStdDevs  = VecBuilder.fill(0.05, 0.05, 99999999);
-
-    // private static final AprilTagFieldLayout field = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField); //Change to load custom field
-
-    // private PhotonPoseEstimator posEstimate1;
-    // private PhotonPoseEstimator posEstimate2;
-    // private PhotonPoseEstimator posEstimate3;
 
    
     public Odometry(){
         super("Odometry");
 
-        // this.kinematics = () -> csd.getKinematics();
-        // this.gyRotation2d = () -> gyro.getRotation2d();
-        // this.modulePositions = () -> telemetry.getModulePoses();
-
-        // posEstimator = new SwerveDrivePoseEstimator(
-        //     this.kinematics.get(), 
-        //     this.gyRotation2d.get(), 
-        //     this.modulePositions.get(), 
-        //     new Pose2d()
-        // );
         Supplier<Rotation2d> gyrRotation = () -> csd.getState().Pose.getRotation();
         cameras.add(new Camera("Name1", gyrRotation, 0, 0, 0, 0, 0, 0)); //TODO name and add vals to cams
         cameras.add(new Camera("Name2", gyrRotation, 0, 0, 0, 0, 0, 0));
     
-    
-        // for(int i = 0; i < cameras.size(); i++){
-        //     photonPoseEstimators[i] = new PhotonPoseEstimator(field, PoseStrategy.PNP_DISTANCE_TRIG_SOLVE, cameras.get(i).getRobotToCamera());
-        //     //Deprecated method, TODO find another way to do lowest ambiguity
-        //     // photonPoseEstimators[i].setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-        // }
     }
 
     public Double get2dDistToTargetAllCams(int targetCol){
@@ -100,16 +58,9 @@ public class Odometry extends SubsystemBase{
         for(Camera camera: cameras){
             Pose2d pos = camera.getRobotPose2d();
             if(pos != null)
-                csd.addVisionMeasurement(pos, camera.getLatestTimeStamp(), visionStdDevs);
+               csd.addVisionMeasurement(pos, camera.getLatestTimeStamp(), visionStdDevs);
         }
-        // posEstimator.update(gyRotation2d.get(), modulePositions.get());
 
-        // for(Camera camera: cameras){
-        //     List<PhotonPipelineResult> unreadResults = camera.getPhotonCamera().getAllUnreadResults();
-        //     if(unreadResults.get(unreadResults.size()-1).hasTargets()){
-        //         posEstimator.addVisionMeasurement(null, 0);
-        //     }
-        // }
     }
 
     public static Odometry getInstance(){

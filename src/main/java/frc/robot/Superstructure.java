@@ -274,16 +274,16 @@ public class Superstructure extends SubsystemBase{
     
     //Arm commands
     //when arm is moving endeffector slowly pushes piece out so compensate with low reversing  speed
-    private Command goToStaticPosCommand(double pos){
-        return Commands.run(
+    private Command goToStaticPosCommand(){
+        return Commands.runOnce(
             () -> endEffector.setSpeed(arm.getPivotVelocity()*(3.0/64.0))
-        ).deadlineFor(Commands.runOnce(() -> arm.armToPos(pos), arm));
+        );
     }
 
     private Command goToArmPosStaticCommand(RobotState state){
         return new FunctionalCommand( 
             () -> this.setWantedRobotState(state),
-            () -> this.goToStaticPosCommand(this.stateToArmPosStatic(wantedState)),
+            () -> this.goToStaticPosCommand(),
             (interrupted) -> this.setCurrentRobotState(state),
             () -> {
                 return arm.atWantedArmPos(this.stateToArmPosStatic(wantedState));
@@ -295,8 +295,11 @@ public class Superstructure extends SubsystemBase{
     private Command goToArmPosCommand(RobotState state, double dist){
         return new FunctionalCommand( 
             () -> this.setWantedRobotState(state),
-            () -> this.goToStaticPosCommand(this.stateToArmPos(wantedState, dist)),
-            (interrupted) -> this.setCurrentRobotState(state),
+            () -> this.goToStaticPosCommand(),
+            (interrupted) -> {
+                this.setCurrentRobotState(state); 
+                endEffector.stopEndEffectorCommand();
+            },
             () -> {
                 return arm.atWantedArmPos(this.stateToArmPosStatic(wantedState));
             },
