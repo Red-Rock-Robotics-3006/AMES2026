@@ -32,9 +32,9 @@ public class Arm extends SubsystemBase{
     private static Arm instance = null;
 
     private static EndEffector endeffector = EndEffector.getInstance();
-    private final Superstructure superstructure= new Superstructure();
+    // private final Superstructure superstructure= new Superstructure();
 
-    private final RedRockTalon pivotMotor = new RedRockTalon(21, "Arm/pivot-motor", "*");
+    private final RedRockTalon pivotMotor = new RedRockTalon(21, "Arm/pivot-motor");
     // private final CANcoder encoder = new CANcoder(25, "*");
 
 
@@ -45,14 +45,15 @@ public class Arm extends SubsystemBase{
     // private SmartDashboardNumber kCANCoderOffset = new SmartDashboardNumber("Arm/CANCoder/k-cancoder-offset", 0); //TODO gives range of rotation, so 0.7 would be -0.3, 0.7, 1 would be 0, 1 etc
 
     //Limits and Thresholds
-    private SmartDashboardNumber minArmPos = new SmartDashboardNumber("Arm/Positions/min", 0); //TODO
-    private SmartDashboardNumber maxArmPos = new SmartDashboardNumber("Arm/Positions/max", 0); //TODO
-    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("Arm/Tolerance", 0.1); //TODO //In rotations
+    private SmartDashboardNumber minArmPos = new SmartDashboardNumber("Arm/Positions/min", 0.007); 
+    private SmartDashboardNumber maxArmPos = new SmartDashboardNumber("Arm/Positions/max", 0.3); 
+    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("Arm/Tolerance", 0.0025); 
     private SmartDashboardNumber currentLimit = new SmartDashboardNumber("Arm/current-limit", 45);
+    private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("Arm/normalize-speed", 0.01);
     
     //Testing
-    private SmartDashboardNumber testPos = new SmartDashboardNumber("Arm/test-pos", 0);
-    private SmartDashboardNumber testPosChangeAmount = new SmartDashboardNumber("Arm/test-pos-change-amount", 1); 
+    private SmartDashboardNumber testPosChangeAmount = new SmartDashboardNumber("Arm/test-pos-change-amount", 0.01); 
+    private SmartDashboardNumber testPosNoSuperstructure = new SmartDashboardNumber("Arm/test-pos-no-superstructure", -0.017); 
     
     public Arm(){
         super("Arm");
@@ -81,17 +82,18 @@ public class Arm extends SubsystemBase{
         .withSlot0Configs(
             new Slot0Configs()
             .withKA(0) //TODO
-            .withKS(0) 
+            .withKS(0.4) 
             .withKV(0)
-            .withKP(0)
+            .withKP(150)
             .withKI(0) 
-            .withKD(0) 
+            .withKD(3) 
+            .withKG(0.2)
         )
         .withMotionMagicConfigs(
             new MotionMagicConfigs()
-            .withMotionMagicAcceleration(850)
-            .withMotionMagicCruiseVelocity(150)
-            .withMotionMagicJerk(10000000)
+            .withMotionMagicAcceleration(500)
+            .withMotionMagicCruiseVelocity(0.6)
+            .withMotionMagicJerk(0)
         )
         .withSpikeThreshold(17)
         .withCurrentLimitConfigs(
@@ -112,7 +114,7 @@ public class Arm extends SubsystemBase{
     }
 
     private void normalizeArm(){
-        this.pivotMotor.motor.set(0.1);
+        this.pivotMotor.motor.set(this.normalizeSpeed.getNumber());
     }
 
     private void resetArm(){
@@ -130,13 +132,13 @@ public class Arm extends SubsystemBase{
     }
 
     //Testing
-    private void increaseTestPos(double amount){
-        this.testPos.putNumber(this.testPos.getNumber() + amount);
-    }
+    // private void increaseTestPos(double amount){
+    //     this.testPos.putNumber(this.testPos.getNumber() + amount);
+    // }
 
-    private void decreaseTestPos(double amount){
-        this.testPos.putNumber(this.testPos.getNumber() - amount);
-    }
+    // private void decreaseTestPos(double amount){
+    //     this.testPos.putNumber(this.testPos.getNumber() - amount);
+    // }
 
 
     //Other Methods
@@ -164,24 +166,24 @@ public class Arm extends SubsystemBase{
     //Testing
     public Command goToTestPosCommand(){
         return Commands.runOnce(
-            () -> armToPos(testPos.getNumber()), 
+            () -> armToPos(this.testPosNoSuperstructure.getNumber()), 
             this
         );
     }
     
-    public Command decreaseTestPosCommand(){
-        return Commands.runOnce(
-            () -> this.decreaseTestPos(testPosChangeAmount.getNumber()),
-            this
-        );
-    }
+    // public Command decreaseTestPosCommand(){
+    //     return Commands.runOnce(
+    //         () -> this.decreaseTestPos(testPosChangeAmount.getNumber()),
+    //         this
+    //     );
+    // }
 
-    public Command increaseTestPosCommand(){
-        return Commands.runOnce(
-            () -> this.increaseTestPos(testPosChangeAmount.getNumber()),
-            this
-        );
-    }
+    // public Command increaseTestPosCommand(){
+    //     return Commands.runOnce(
+    //         () -> this.increaseTestPos(testPosChangeAmount.getNumber()),
+    //         this
+    //     );
+    // }
 
     public Command stopArmCommand(){
         return Commands.runOnce(
@@ -204,8 +206,8 @@ public class Arm extends SubsystemBase{
         SmartDashboard.putNumber("Arm/supply-current", this.pivotMotor.motor.getSupplyCurrent().getValueAsDouble());
         Logger.recordOutput("Arm/supply-current", this.pivotMotor.motor.getSupplyCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Arm/velocity", this.pivotMotor.motor.getVelocity().getValueAsDouble());
-        Logger.recordOutput("Arm/position", this.pivotMotor.motor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Arm/velocity", this.pivotMotor.motor.getPosition().getValueAsDouble());
+        Logger.recordOutput("Arm/currentPose", this.pivotMotor.motor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Arm/currentPos", this.pivotMotor.motor.getPosition().getValueAsDouble());
         Logger.recordOutput("Arm/velocity", this.pivotMotor.motor.getVelocity().getValueAsDouble());
         SmartDashboard.putNumber("Arm/acceleration", this.pivotMotor.motor.getAcceleration().getValueAsDouble());
         Logger.recordOutput("Arm/acceleration", this.pivotMotor.motor.getAcceleration().getValueAsDouble());

@@ -20,7 +20,7 @@ import frc.robot.Superstructure;
 public class EndEffector extends SubsystemBase{
     private static EndEffector instance = null;
 
-    private final Superstructure superstructure = new Superstructure();
+    // private final Superstructure superstructure = Superstructure.getInstance();
     private final Arm arm = Arm.getInstance();
 
     private final RedRockTalon endEffectMotor = new RedRockTalon(31, "EndEffector/endEffectMotor"); //TODO

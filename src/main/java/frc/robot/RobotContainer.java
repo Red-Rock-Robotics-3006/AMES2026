@@ -12,7 +12,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 // import frc.robot.Superstructure.DockColumns;
-import frc.robot.subsystems.vision.Odometry;
+// import frc.robot.subsystems.vision.Odometry;
+import frc.robot.Superstructure.RobotState;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Autos;
 import frc.robot.subsystems.EndEffector;
 // import frc.robot.subsystems.EndEffectorPrototype;
@@ -27,15 +29,16 @@ import choreo.auto.AutoFactory;
 
 
 public class RobotContainer {
-  private final static CommandXboxController testStick = new CommandXboxController(3);
-  public final static CommandXboxController driveStick = new CommandXboxController(0);
+  private final static CommandXboxController testStick = new CommandXboxController(0);
+  public final static CommandXboxController driveStick = new CommandXboxController(3);
   public final static CommandXboxController mechStick = new CommandXboxController(1);
   
   private final CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
-  // // private final EndEffectorPrototype endEffectorPrototype = EndEffectorPrototype.getInstance();
-  // private final Superstructure superstructure = Superstructure.getInstance();
-  // private final Intake intake = Intake.getInstance();
-  // private final EndEffector endEffector = EndEffector.getInstance();
+  // private final EndEffectorPrototype endEffectorPrototype = EndEffectorPrototype.getInstance();
+  private final Superstructure superstructure = Superstructure.getInstance();
+  private final Intake intake = Intake.getInstance();
+  private final EndEffector endEffector = EndEffector.getInstance();
+  private final Arm arm = Arm.getInstance();
   // private final Odometry odometry = Odometry.getInstance();
   private final SwerveRequest.FieldCentric csdRequest = new SwerveRequest.FieldCentric().withDeadband(0.1);
   // private final Autos auto = new Auto();
@@ -45,22 +48,22 @@ public class RobotContainer {
   
   // private final AutoFactory autoFactory;
   private final static Autos autos = Autos.getInstance();
-  private SendableChooser<Command> chooser = new SendableChooser<>();
+  // private SendableChooser<Command> chooser = new SendableChooser<>();
 
   public RobotContainer() {
-    // configureTestBindings();
+    configureTestBindings();
     configureBindings();
-    configureAutoChooser();
+    // configureAutoChooser();
   }
 
   private void configureAutoChooser(){
-    chooser.setDefaultOption("noAuto", Commands.runOnce(() -> System.out.println("no auto")));
+    // chooser.setDefaultOption("noAuto", Commands.runOnce(() -> System.out.println("no auto")));
 
-    chooser.addOption("testAuto", autos.testSlowAuto());
-    chooser.addOption("Blue2ShellAuto", autos.Blue2ShellAuto());
-    chooser.addOption("Red2ShellAuto", autos.Red2ShellAuto());
+    // chooser.addOption("testAuto", autos.testSlowAuto());
+    // chooser.addOption("Blue2ShellAuto", autos.Blue2ShellAuto());
+    // chooser.addOption("Red2ShellAuto", autos.Red2ShellAuto());
 
-    SmartDashboard.putData("Auto Chooser", chooser);
+    // SmartDashboard.putData("Auto Chooser", chooser);
   }
   
   private void configureBindings(){
@@ -144,6 +147,8 @@ public class RobotContainer {
 	}
 
   private void configureTestBindings(){
+    // testStick.rightTrigger().onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.TEST)));
+    testStick.leftTrigger().onTrue(arm.goToTestPosCommand());
     // testStick.y()
     //   .onTrue(endEffectorPrototype.increaseEndEffectorSpeedTestCommand())
     //   .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
@@ -170,6 +175,6 @@ public class RobotContainer {
 
 
   public Command getAutonomousCommand() {
-    return chooser.getSelected();
+    return Commands.print("No auto configured");
   }
 }
