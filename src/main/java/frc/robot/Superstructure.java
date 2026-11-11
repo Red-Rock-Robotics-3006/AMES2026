@@ -17,6 +17,7 @@ import frc.robot.subsystems.vision.Odometry;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LED;
 import frc.robot.subsystems.constants.LERPTables;
+import frc.robot.subsystems.drivetrain.CommandSwerveDrivetrain;
 import redrocklib.logging.SmartDashboardBoolean;
 import redrocklib.logging.SmartDashboardNumber;
 
@@ -46,9 +47,13 @@ public class Superstructure extends SubsystemBase{
     private Arm arm = Arm.getInstance();
     private Intake intake = Intake.getInstance();
     private Odometry odometry = Odometry.getInstance();
+<<<<<<< Updated upstream
     private AutoAlign autoAlign = AutoAlign.getInstance();
+=======
+    // private AutoAlign autoAlign = AutoAlign.getInstance();
+>>>>>>> Stashed changes
 
-    // private CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance(); 
+    private CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance(); 
     // private LED led = LED.getInstance();
 
     //ARM
@@ -360,7 +365,15 @@ public class Superstructure extends SubsystemBase{
 
     @Override
     public void periodic(){
+<<<<<<< Updated upstream
         distanceFromTarget = dockColumnTarget!=DockColumns.NONE?odometry.get2dDistToTargetAllCams(this.getIntDockCol(dockColumnTarget)):-1;
+=======
+        // distanceFromTarget = dockColumnTarget!=DockColumns.NONE?odometry.get2dDistToTargetAllCams(this.getIntDockCol(dockColumnTarget)):-1;
+        Double dist = odometry.get2dDistToTargetAllCams(this.getIntDockCol(dockColumnTarget));
+        if(dist!= null) SmartDashboard.putNumber("Superstructure/DistFromTarget", dist);
+        else SmartDashboard.putNumber("Superstructure/DistFromTarget", -1);
+        
+>>>>>>> Stashed changes
         if(wantedState != currentState){
             this.goToWantedState();
         }
