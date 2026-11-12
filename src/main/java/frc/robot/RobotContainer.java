@@ -164,7 +164,8 @@ public class RobotContainer {
     testStick.leftTrigger().onTrue(arm.goToTestPosCommand());
     
     testStick.x().onTrue(endEffector.runIntakeTestCommand()).onFalse(endEffector.stopEndEffectorCommand());
-    testStick.y().onTrue(endEffector.runIntakeTestCommandDutyCycle()).onFalse(endEffector.stopIntakeTestCommandDutyCycle());
+    testStick.y().onTrue(endEffector.shootTestCommand()).onFalse(endEffector.stopIntakeTestCommandDutyCycle());
+    // testStick.y().onTrue(endEffector.shootTestCommand()).onFalse(endEffector.stopIntakeTestCommandDutyCycle());
     // testStick.y()
     //   .onTrue(endEffectorPrototype.increaseEndEffectorSpeedTestCommand())
     //   .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());

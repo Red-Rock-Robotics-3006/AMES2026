@@ -69,7 +69,7 @@ public class Superstructure extends SubsystemBase{
     private SmartDashboardNumber sourceCellArmPos = new SmartDashboardNumber("ArmPoses/Positions/source-cell", 0); //TODO
     private SmartDashboardNumber stowArmPos = new SmartDashboardNumber("ArmPoses/Positions/stow", 0); //TODO
     private SmartDashboardNumber intermediatePos = new SmartDashboardNumber("ArmPoses/Positions/intermediate", 0);
-    private SmartDashboardNumber test = new SmartDashboardNumber("ArmPoses/Positions/test", -0.17);
+    private SmartDashboardNumber test = new SmartDashboardNumber("ArmPoses/Positions/test", 0.23);
     //EndEffector
 
     //Static Velocities

@@ -47,7 +47,7 @@ public class Arm extends SubsystemBase{
     //Limits and Thresholds
     private SmartDashboardNumber minArmPos = new SmartDashboardNumber("Arm/Positions/min", 0); 
     private SmartDashboardNumber maxArmPos = new SmartDashboardNumber("Arm/Positions/max", 0.3); 
-    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("Arm/Tolerance", 0.0); 
+    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("Arm/Tolerance", 0.01); 
     private SmartDashboardNumber currentLimit = new SmartDashboardNumber("Arm/current-limit", 45);
     private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("Arm/normalize-speed", -0.2);
     
@@ -72,7 +72,13 @@ public class Arm extends SubsystemBase{
         //     .withMagnetOffset(kCANCoderOffset.getNumber())
         // );
 
-        this.pivotMotor.withMotorOutputConfigs(
+        this.pivotMotor
+        .withFeedbackConfigs(
+            new FeedbackConfigs()
+            .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
+            .withSensorToMechanismRatio(64)
+        )
+        .withMotorOutputConfigs(
             new MotorOutputConfigs()
             .withInverted(InvertedValue.Clockwise_Positive)
             .withPeakForwardDutyCycle(1d)
@@ -81,7 +87,7 @@ public class Arm extends SubsystemBase{
         )
         .withSlot0Configs(
             new Slot0Configs()
-            .withKA(0) //TODO
+            .withKA(0) 
             .withKS(0.4) 
             .withKV(0)
             .withKP(150)
