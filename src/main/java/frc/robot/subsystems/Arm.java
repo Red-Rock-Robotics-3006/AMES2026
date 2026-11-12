@@ -45,20 +45,20 @@ public class Arm extends SubsystemBase{
     // private SmartDashboardNumber kCANCoderOffset = new SmartDashboardNumber("Arm/CANCoder/k-cancoder-offset", 0); //TODO gives range of rotation, so 0.7 would be -0.3, 0.7, 1 would be 0, 1 etc
 
     //Limits and Thresholds
-    private SmartDashboardNumber minArmPos = new SmartDashboardNumber("Arm/Positions/min", 0.007); 
+    private SmartDashboardNumber minArmPos = new SmartDashboardNumber("Arm/Positions/min", 0); 
     private SmartDashboardNumber maxArmPos = new SmartDashboardNumber("Arm/Positions/max", 0.3); 
-    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("Arm/Tolerance", 0.0025); 
+    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("Arm/Tolerance", 0.0); 
     private SmartDashboardNumber currentLimit = new SmartDashboardNumber("Arm/current-limit", 45);
-    private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("Arm/normalize-speed", 0.01);
+    private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("Arm/normalize-speed", -0.2);
     
     //Testing
     private SmartDashboardNumber testPosChangeAmount = new SmartDashboardNumber("Arm/test-pos-change-amount", 0.01); 
-    private SmartDashboardNumber testPosNoSuperstructure = new SmartDashboardNumber("Arm/test-pos-no-superstructure", -0.017); 
+    private SmartDashboardNumber testPosNoSuperstructure = new SmartDashboardNumber("Arm/test-pos-no-superstructure", 0.17); 
     
     public Arm(){
         super("Arm");
 
-        AutoLogOutputManager.addObject(this);
+        // AutoLogOutputManager.addObject(this);
         // FeedbackConfigs feedbackConfigs = new FeedbackConfigs()
         // .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
         // .withFeedbackRemoteSensorID(encoder.getDeviceID())
@@ -74,7 +74,7 @@ public class Arm extends SubsystemBase{
 
         this.pivotMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
-            .withInverted(InvertedValue.CounterClockwise_Positive)
+            .withInverted(InvertedValue.Clockwise_Positive)
             .withPeakForwardDutyCycle(1d)
             .withPeakReverseDutyCycle(-1d)
             .withNeutralMode(NeutralModeValue.Coast)
@@ -124,7 +124,7 @@ public class Arm extends SubsystemBase{
 
     public void armToPos(double pos){
         this.pivotMotor.setMotionMagicPosition(MathUtil.clamp(pos, minArmPos.getNumber(), maxArmPos.getNumber()));
-        Logger.recordOutput("Arm/desiredArmPos", pos);
+        // Logger.recordOutput("Arm/desiredArmPos", pos);
     }
 
     public double getPivotVelocity(){
@@ -151,15 +151,20 @@ public class Arm extends SubsystemBase{
 
     //Commands
 
-    public Command zeroArmCommand(){
+    public Command zeroArmCommandMove(){
         return new FunctionalCommand(
             () -> this.normalizeArm(),
             () -> {},
             (interrupted) -> this.resetArm(),
             () -> {
                 return this.pivotMotor.motor.getSupplyCurrent().getValueAsDouble() > this.currentLimit.getNumber();
-            }
+            },
+            this
         );
+    }
+
+    public Command zeroArmCommand(){
+        return Commands.runOnce(() -> this.resetArm(), this);
     }
 
 
@@ -204,17 +209,17 @@ public class Arm extends SubsystemBase{
         // Logger.recordOutput("Arm/encoder/posistion-rotations", encoderPos.getValueAsDouble());
     
         SmartDashboard.putNumber("Arm/supply-current", this.pivotMotor.motor.getSupplyCurrent().getValueAsDouble());
-        Logger.recordOutput("Arm/supply-current", this.pivotMotor.motor.getSupplyCurrent().getValueAsDouble());
+        // Logger.recordOutput("Arm/supply-current", this.pivotMotor.motor.getSupplyCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Arm/velocity", this.pivotMotor.motor.getVelocity().getValueAsDouble());
-        Logger.recordOutput("Arm/currentPose", this.pivotMotor.motor.getPosition().getValueAsDouble());
+        // Logger.recordOutput("Arm/currentPose", this.pivotMotor.motor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Arm/currentPos", this.pivotMotor.motor.getPosition().getValueAsDouble());
-        Logger.recordOutput("Arm/velocity", this.pivotMotor.motor.getVelocity().getValueAsDouble());
+        // Logger.recordOutput("Arm/velocity", this.pivotMotor.motor.getVelocity().getValueAsDouble());
         SmartDashboard.putNumber("Arm/acceleration", this.pivotMotor.motor.getAcceleration().getValueAsDouble());
-        Logger.recordOutput("Arm/acceleration", this.pivotMotor.motor.getAcceleration().getValueAsDouble());
+        // Logger.recordOutput("Arm/acceleration", this.pivotMotor.motor.getAcceleration().getValueAsDouble());
     }
 
     public static Arm getInstance(){
-        if(instance == null) return instance = new Arm();
+        if(instance == null) instance = new Arm();
         return instance;
     }
 }

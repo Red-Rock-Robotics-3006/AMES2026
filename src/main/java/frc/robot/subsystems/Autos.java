@@ -103,28 +103,4 @@ public class Autos {
         if(instance == null) instance = new Autos();
         return instance;
     }
-
-    // public static class RedRockAuto{
-    //     private final String name;
-    //     private final Command autoRoutineCommand;
-    //     private final Pose2d initPose2d;
-
-    //     public RedRockAuto(String autoName, Command autoCommand, Pose2d initialPose){
-    //         this.name = autoName;
-    //         this.autoRoutineCommand = autoCommand;
-    //         this.initPose2d = initialPose;
-    //     }
-
-    //     public String getAutoName(){
-    //         return this.name;
-    //     }
-
-    //     public Command getAuto(){
-    //         return this.autoRoutineCommand;
-    //     }
-
-    //     public Pose2d getInitPos(){
-    //         return this.initPose2d;
-    //     }
-    // }
 }
