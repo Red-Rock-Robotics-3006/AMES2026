@@ -1,10 +1,13 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.CoastOut;
+import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -20,32 +23,40 @@ import frc.robot.Superstructure;
 public class EndEffector extends SubsystemBase{
     private static EndEffector instance = null;
 
-    private final Superstructure superstructure = new Superstructure();
+    // private final Superstructure superstructure = Superstructure.getInstance();
     private final Arm arm = Arm.getInstance();
 
     private final RedRockTalon endEffectMotor = new RedRockTalon(31, "EndEffector/endEffectMotor"); //TODO
 
     //Thresholds and Limits
-    SmartDashboardNumber velocityThreshold = new SmartDashboardNumber("EndEffector/velocityThreshold", 70);
-    SmartDashboardNumber intakeVelocity = new SmartDashboardNumber("EndEffector/intaking-velocity", -1200);
-    SmartDashboardNumber outakeVelocity = new SmartDashboardNumber("EndEffector/outaking-velocity", 500);
-    SmartDashboardNumber keepPieceInSpeed = new SmartDashboardNumber("EndEffector/keep-pieces-in-end-effector-velocity", 10);
+    private SmartDashboardNumber velocityThreshold = new SmartDashboardNumber("EndEffector/velocityThreshold", 70);
+    private SmartDashboardNumber intakeVelocity = new SmartDashboardNumber("EndEffector/intaking-velocity", -1200);
+    private SmartDashboardNumber outakeVelocity = new SmartDashboardNumber("EndEffector/outaking-velocity", 500);
+    private SmartDashboardNumber keepPieceInSpeed = new SmartDashboardNumber("EndEffector/keep-pieces-in-end-effector-velocity", 10);
     private SmartDashboardNumber currentLimit = new SmartDashboardNumber("EndEffector/current-limit", 45);
+    private SmartDashboardNumber testSpeed = new SmartDashboardNumber("EndEffector/test-speed", 2500);
+    private SmartDashboardNumber testIntakeSpeed = new SmartDashboardNumber("EndEffector/test-intake-speed", -200);
 
     public EndEffector(){
-        this.endEffectMotor.withMotorOutputConfigs(
+        this.endEffectMotor
+        .withFeedbackConfigs(
+            new FeedbackConfigs()
+            .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
+            .withSensorToMechanismRatio(3)
+        )
+        .withMotorOutputConfigs(
             new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
             .withPeakForwardDutyCycle(1d)
             .withPeakReverseDutyCycle(-1d)
-            .withNeutralMode(NeutralModeValue.Brake)
+            .withNeutralMode(NeutralModeValue.Coast)
         )
         .withSlot0Configs(
             new Slot0Configs()
-            .withKA(0) //TODO
-            .withKS(0) 
-            .withKV(0)
-            .withKP(0)
+            .withKA(0) 
+            .withKS(0.4) 
+            .withKV(0.37)
+            .withKP(0.6)
             .withKI(0) 
             .withKD(0) 
         )
@@ -67,8 +78,8 @@ public class EndEffector extends SubsystemBase{
 
 
     //Movement methods
-    public void setSpeed(double velocity){
-        endEffectMotor.setMotionMagicVelocity(velocity);
+    public void setSpeed(double rpm){
+        endEffectMotor.motor.setControl(new VelocityVoltage(rpm/60).withSlot(0).withOverrideBrakeDurNeutral(true));
     }
 
     private void stop(){
@@ -86,6 +97,21 @@ public class EndEffector extends SubsystemBase{
 
     
     //Commands
+
+    public Command shootTestCommand(){
+        return Commands.runOnce(() -> this.setSpeed(this.testSpeed.getNumber()), this);
+    }
+    public Command runIntakeTestCommand(){
+        return Commands.runOnce(() -> this.setSpeed(this.testIntakeSpeed.getNumber()), this);
+    }
+    public Command runIntakeTestCommandDutyCycle(){
+        return Commands.runOnce(() -> endEffectMotor.motor.set(0.1), this);
+    }
+    public Command stopIntakeTestCommandDutyCycle(){
+        return Commands.runOnce(() -> endEffectMotor.motor.set(0), this);
+    }
+
+
     public Command shootCommand(double velocity){
         return Commands.runOnce(
             () -> this.setSpeed(velocity), this

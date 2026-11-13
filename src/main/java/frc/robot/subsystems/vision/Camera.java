@@ -68,7 +68,7 @@ public class Camera extends SubsystemBase{
     private Supplier<Rotation2d> gyroAngle;
 
     private SmartDashboardNumber maxAmbiguity = new SmartDashboardNumber("Camera/max-ambiguity", 0.2);
-    // private SmartDashboardNumber maxDistFromTag = new SmartDashboardNumber("Camera/max-distance-from-tag", 1.524); //5 feet in meters
+    private SmartDashboardNumber maxDistFromTagTakingMeas = new SmartDashboardNumber("Camera/max-distance-from-tag", 3); //10 feet in meters
    
     private SmartDashboardBoolean isRedAlliance = new SmartDashboardBoolean("Camera/is-red-alliance", true);
 
@@ -104,7 +104,7 @@ public class Camera extends SubsystemBase{
     public Transform3d getValidTagMeasurements(){
         if(target == null || distToTag == null) return null;
         if((target.getFiducialId() == validTags[0] || target.getFiducialId() == validTags[1])){
-            if(target.getPoseAmbiguity() < this.maxAmbiguity.getNumber()){
+            if(target.getPoseAmbiguity() < this.maxAmbiguity.getNumber() && distToTag <= this.maxDistFromTagTakingMeas.getNumber()){
                 return target.getBestCameraToTarget();
             }
         }

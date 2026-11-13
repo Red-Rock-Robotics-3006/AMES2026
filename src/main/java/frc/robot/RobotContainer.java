@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-// import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -12,6 +11,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Superstructure.DockColumns;
+import frc.robot.Superstructure.RobotState;
+import frc.robot.subsystems.Arm;
 // import frc.robot.Superstructure.DockColumns;
 import frc.robot.subsystems.vision.Odometry;
 import frc.robot.subsystems.Autos;
@@ -19,6 +20,7 @@ import frc.robot.subsystems.EndEffector;
 // import frc.robot.subsystems.EndEffectorPrototype;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.drivetrain.CommandSwerveDrivetrain;
+import frc.robot.subsystems.vision.Odometry;
 import redrocklib.logging.SmartDashboardNumber;
 
 import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModule.DriveRequestType;
@@ -29,36 +31,38 @@ import choreo.auto.AutoFactory;
 
 
 public class RobotContainer {
-  private final static CommandXboxController testStick = new CommandXboxController(3);
-  public final static CommandXboxController driveStick = new CommandXboxController(0);
+  private final static CommandXboxController testStick = new CommandXboxController(0);
+  public final static CommandXboxController driveStick = new CommandXboxController(3);
   public final static CommandXboxController mechStick = new CommandXboxController(1);
   
   private final CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
-  // // private final EndEffectorPrototype endEffectorPrototype = EndEffectorPrototype.getInstance();
-  // private final Superstructure superstructure = Superstructure.getInstance();
-  // private final Intake intake = Intake.getInstance();
-  // private final EndEffector endEffector = EndEffector.getInstance();
-  // private final Odometry odometry = Odometry.getInstance();
-  private final SwerveRequest.FieldCentric csdRequest = new SwerveRequest.FieldCentric().withDeadband(0.1).withRotationalDeadband(0.1);
+  private SmartDashboardNumber testEEvel = new SmartDashboardNumber("RobotContainer/testEEvel", 0);
+  // private final EndEffectorPrototype endEffectorPrototype = EndEffectorPrototype.getInstance();
+  private final Superstructure superstructure = Superstructure.getInstance();
+  private final Intake intake = Intake.getInstance();
+  private final EndEffector endEffector = EndEffector.getInstance();
+  private final Arm arm = Arm.getInstance();
+  private final Odometry odometry = Odometry.getInstance();
+  private final SwerveRequest.FieldCentric csdRequest = new SwerveRequest.FieldCentric().withDeadband(0.1);
   // private final Autos auto = new Auto();
   private SmartDashboardNumber maxTranslationProportion = new SmartDashboardNumber("CommandSwerveDrivetrain/maxTranslationProportion", 0.70);
   private SmartDashboardNumber maxRotationProportion = new SmartDashboardNumber("CommandSwerveDrivetrain/maxRotationProportion", 0.70);
   
-  
-  // private final AutoFactory autoFactory;
   private final static Autos autos = Autos.getInstance();
   private SendableChooser<Command> chooser = new SendableChooser<>();
 
+  private double distToTarget;
+
   public RobotContainer() {
-<<<<<<< Updated upstream
+    configureTestBindings();
+    // configureBindings();
     // configureTestBindings();
     configureBindings();
     configureAutoChooser();
-=======
+
     configureTestBindings();
     // configureBindings();
     // configureAutoChooser();
->>>>>>> Stashed changes
   }
 
   private void configureAutoChooser(){
@@ -79,11 +83,11 @@ public class RobotContainer {
     driveStick.rightStick().onTrue(Commands.runOnce(() ->csd.seedFieldCentric()));
 
     // Drivestick bindings
-    // driveStick.leftTrigger(0.25) //Shoots with lerp
-    //   .onTrue(
-    //     superstructure.endEffectCommand()
-    //       .onlyIf(() -> odometry.get2dDistToTargetAllCams(superstructure.getIntDockCol(superstructure.getDockColumn())) <= 5))
-    //   .onFalse(endEffector.stopEndEffectorCommand());
+    driveStick.leftTrigger(0.25) //Shoots with lerp
+      .onTrue(
+        superstructure.endEffectCommand()
+          .onlyIf(() -> odometry.get2dDistToTargetAllCams(superstructure.getIntDockCol(superstructure.getDockColumn())) <= 5))
+      .onFalse(endEffector.stopEndEffectorCommand());
     
     driveStick.rightTrigger(0.25)
       .onTrue(Commands.sequence(
@@ -115,53 +119,62 @@ public class RobotContainer {
 
 	//x=L1, y=L2, b=L3, a=shelf
     mechStick.x()
-      .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.L1), superstructure))
-      .onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
+      .onTrue(superstructure.goToArmPosCommand(RobotState.L1, superstructure.getDistToTarget()))
+      .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_SHELL));
     mechStick.y()
-      .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.L2), superstructure))
-      .onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
+      .onTrue(superstructure.goToArmPosCommand(RobotState.L2, superstructure.getDistToTarget()))
+      .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_SHELL));
     mechStick.b()
-	    .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.L3), superstructure))
-      .onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
+	    .onTrue(superstructure.goToArmPosCommand(RobotState.L3, superstructure.getDistToTarget()))
+      .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_SHELL));
     mechStick.a()
-	    .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SHELF), superstructure))
-      .onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure));
+	    .onTrue(superstructure.goToArmPosStaticCommand(RobotState.SHELF))
+      .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_SHELL));
     mechStick.rightBumper()
-	    .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_CELL), superstructure))
-      .onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTERMEDIATE), superstructure));
+	    .onTrue(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_CELL))
+      .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTERMEDIATE));
     mechStick.leftBumper()
-	    .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTAKING_SHELL), superstructure))
-      .onFalse(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTERMEDIATE), superstructure));
+	    .onTrue(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_SHELL))
+      .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTERMEDIATE));
 
     mechStick.leftTrigger(0.25) 
-      .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SOURCE_SHELL), superstructure))
+      .onTrue(
+        Commands.sequence(
+          superstructure.goToArmPosStaticCommand(RobotState.SOURCE_SHELL),
+          endEffector.intakeCommand()
+      ))
       .onFalse(
         Commands.sequence(
-          Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTERMEDIATE), superstructure),
+          superstructure.goToArmPosStaticCommand(RobotState.INTERMEDIATE),
           Commands.runOnce(() -> endEffector.stopEndEffectorCommand(), endEffector)
         )   
       );
     mechStick.rightTrigger(0.25) 
-      .onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.SOURCE_CELL), superstructure))
+      .onTrue(
+        Commands.sequence(
+          superstructure.goToArmPosStaticCommand(RobotState.SOURCE_CELL),
+          endEffector.intakeCommand()
+      ))
       .onFalse(
         Commands.sequence(
-          Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.INTERMEDIATE), superstructure),
+          superstructure.goToArmPosStaticCommand(RobotState.INTERMEDIATE),
           Commands.runOnce(() -> endEffector.stopEndEffectorCommand(), endEffector)
         )   
-      );  
+      ); 
 	}
 
   private void configureTestBindings(){
-<<<<<<< Updated upstream
-=======
+    testStick.rightTrigger()
+	    .onTrue(superstructure.goToArmPosStaticCommand(RobotState.TEST))
+      .onFalse(superstructure.goToArmPosStaticCommand(RobotState.STOW));
     // testStick.rightTrigger().onTrue(Commands.runOnce(() -> superstructure.setWantedRobotState(RobotState.TEST)));
+    testStick.rightBumper().onTrue(arm.zeroArmCommand());
+    testStick.leftBumper().onTrue(arm.zeroArmCommandMove());
     testStick.leftTrigger().onTrue(arm.goToTestPosCommand());
-    superstructure.setDockTarget(DockColumns.LEFT);
-    csd.setDefaultCommand(csd.applyRequest(() -> csdRequest.withVelocityX(-testStick.getLeftY()*maxTranslationProportion.getNumber())
-    													   .withVelocityY(-testStick.getLeftX()*maxTranslationProportion.getNumber())
-														   .withRotationalRate(-testStick.getRightX()*maxRotationProportion.getNumber())));
-
->>>>>>> Stashed changes
+    
+    testStick.x().onTrue(endEffector.runIntakeTestCommand()).onFalse(endEffector.stopEndEffectorCommand());
+    testStick.y().onTrue(endEffector.shootTestCommand()).onFalse(endEffector.stopIntakeTestCommandDutyCycle());
+    // testStick.y().onTrue(endEffector.shootTestCommand()).onFalse(endEffector.stopIntakeTestCommandDutyCycle());
     // testStick.y()
     //   .onTrue(endEffectorPrototype.increaseEndEffectorSpeedTestCommand())
     //   .onFalse(endEffectorPrototype.stopEndEffectorTestCommand());
@@ -186,8 +199,7 @@ public class RobotContainer {
     //   .onFalse(intake.stopIntakeCommand());
   }
 
-
   public Command getAutonomousCommand() {
-    return chooser.getSelected();
+    return Commands.print("No auto configured");
   }
 }
