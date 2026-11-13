@@ -49,12 +49,16 @@ public class Superstructure extends SubsystemBase{
     private Arm arm = Arm.getInstance();
     private Intake intake = Intake.getInstance();
     private Odometry odometry = Odometry.getInstance();
-    // private AutoAlign autoAlign = AutoAlign.getInstance();
+    private AutoAlign autoAlign = AutoAlign.getInstance();
 
     private CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance(); 
 
     private Command activeCommand = null;
-    // private LED led = LED.getInstance();
+    private AutoAlign autoAlign = AutoAlign.getInstance();
+    // private AutoAlign autoAlign = AutoAlign.getInstance();
+
+    private CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance(); 
+    private LED led = LED.getInstance();
 
     //ARM
 

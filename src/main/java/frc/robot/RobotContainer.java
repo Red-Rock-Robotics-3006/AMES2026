@@ -13,6 +13,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Superstructure.DockColumns;
 import frc.robot.Superstructure.RobotState;
 import frc.robot.subsystems.Arm;
+// import frc.robot.Superstructure.DockColumns;
+import frc.robot.subsystems.vision.Odometry;
 import frc.robot.subsystems.Autos;
 import frc.robot.subsystems.EndEffector;
 // import frc.robot.subsystems.EndEffectorPrototype;
@@ -21,6 +23,7 @@ import frc.robot.subsystems.drivetrain.CommandSwerveDrivetrain;
 import frc.robot.subsystems.vision.Odometry;
 import redrocklib.logging.SmartDashboardNumber;
 
+import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModule.DriveRequestType;
 import com.ctre.phoenix6.signals.RobotEnableValue;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -53,7 +56,13 @@ public class RobotContainer {
   public RobotContainer() {
     configureTestBindings();
     // configureBindings();
+    // configureTestBindings();
+    configureBindings();
     configureAutoChooser();
+
+    configureTestBindings();
+    // configureBindings();
+    // configureAutoChooser();
   }
 
   private void configureAutoChooser(){
