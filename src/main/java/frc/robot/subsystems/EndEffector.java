@@ -23,6 +23,13 @@ import frc.robot.Superstructure;
 public class EndEffector extends SubsystemBase{
     private static EndEffector instance = null;
 
+    public static enum IntakeState{
+        NOTHING,
+        INTAKE_SHELL,
+    }
+
+    private IntakeState intakeState = IntakeState.NOTHING;
+
     // private final Superstructure superstructure = Superstructure.getInstance();
     private final Arm arm = Arm.getInstance();
 
@@ -30,10 +37,10 @@ public class EndEffector extends SubsystemBase{
 
     //Thresholds and Limits
     private SmartDashboardNumber velocityThreshold = new SmartDashboardNumber("EndEffector/velocityThreshold", 70);
-    private SmartDashboardNumber intakeVelocity = new SmartDashboardNumber("EndEffector/intaking-velocity", -1200);
+    private SmartDashboardNumber intakeVelocity = new SmartDashboardNumber("EndEffector/intaking-velocity", -200);
     private SmartDashboardNumber outakeVelocity = new SmartDashboardNumber("EndEffector/outaking-velocity", 500);
     private SmartDashboardNumber keepPieceInSpeed = new SmartDashboardNumber("EndEffector/keep-pieces-in-end-effector-velocity", 10);
-    private SmartDashboardNumber currentLimit = new SmartDashboardNumber("EndEffector/current-limit", 45);
+    private SmartDashboardNumber currentLimit = new SmartDashboardNumber("EndEffector/current-limit", 60);
     private SmartDashboardNumber testSpeed = new SmartDashboardNumber("EndEffector/test-speed", 2500);
     private SmartDashboardNumber testIntakeSpeed = new SmartDashboardNumber("EndEffector/test-intake-speed", -200);
 
@@ -42,7 +49,7 @@ public class EndEffector extends SubsystemBase{
         .withFeedbackConfigs(
             new FeedbackConfigs()
             .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
-            .withSensorToMechanismRatio(3)
+            .withSensorToMechanismRatio(1)
         )
         .withMotorOutputConfigs(
             new MotorOutputConfigs()
@@ -69,9 +76,9 @@ public class EndEffector extends SubsystemBase{
         .withSpikeThreshold(17)
         .withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(45)
+            .withSupplyCurrentLimit(100)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(60)
+            .withStatorCurrentLimit(100)
             .withStatorCurrentLimitEnable(true)
         ).withTuningEnabled(true);
     }
@@ -95,11 +102,17 @@ public class EndEffector extends SubsystemBase{
         ) <= this.velocityThreshold.getNumber();
     }
 
-    
+    public IntakeState getIntakeState(){
+        return intakeState;
+    }
+
     //Commands
 
     public Command shootTestCommand(){
-        return Commands.runOnce(() -> this.setSpeed(this.testSpeed.getNumber()), this);
+        return Commands.sequence(
+            Commands.runOnce(() -> this.setSpeed(this.testSpeed.getNumber()), this),
+            Commands.runOnce(() -> intakeState = IntakeState.NOTHING)
+        );
     }
     public Command runIntakeTestCommand(){
         return Commands.runOnce(() -> this.setSpeed(this.testIntakeSpeed.getNumber()), this);
@@ -113,8 +126,9 @@ public class EndEffector extends SubsystemBase{
 
 
     public Command shootCommand(double velocity){
-        return Commands.runOnce(
-            () -> this.setSpeed(velocity), this
+        return Commands.sequence(
+            Commands.runOnce(() -> this.setSpeed(velocity), this),
+            Commands.runOnce(() -> intakeState = IntakeState.NOTHING)
         );
     }
     
@@ -150,7 +164,10 @@ public class EndEffector extends SubsystemBase{
         return new FunctionalCommand(
             () -> this.setSpeed(intakeVelocity.getNumber()), 
             () -> {}, 
-            (interrupted) -> this.stop(), 
+            (interrupted) -> {
+                this.stop();
+                intakeState = IntakeState.INTAKE_SHELL;
+            },
             () -> {
                 return this.endEffectMotor.motor.getSupplyCurrent().getValueAsDouble() > this.currentLimit.getNumber();
             }, 

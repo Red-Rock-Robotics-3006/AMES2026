@@ -46,14 +46,14 @@ public class Arm extends SubsystemBase{
 
     //Limits and Thresholds
     private SmartDashboardNumber minArmPos = new SmartDashboardNumber("Arm/Positions/min", 0); 
-    private SmartDashboardNumber maxArmPos = new SmartDashboardNumber("Arm/Positions/max", 0.3); 
+    private SmartDashboardNumber maxArmPos = new SmartDashboardNumber("Arm/Positions/max", 0.64); 
     private SmartDashboardNumber armTolerance = new SmartDashboardNumber("Arm/Tolerance", 0.01); 
-    private SmartDashboardNumber currentLimit = new SmartDashboardNumber("Arm/current-limit", 45);
+    private SmartDashboardNumber currentLimit = new SmartDashboardNumber("Arm/current-limit", 30);
     private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("Arm/normalize-speed", -0.2);
     
     //Testing
     private SmartDashboardNumber testPosChangeAmount = new SmartDashboardNumber("Arm/test-pos-change-amount", 0.01); 
-    private SmartDashboardNumber testPosNoSuperstructure = new SmartDashboardNumber("Arm/test-pos-no-superstructure", 0.17); 
+    private SmartDashboardNumber testPosNoSuperstructure = new SmartDashboardNumber("Arm/test-pos-no-superstructure", 0.25); 
     
     public Arm(){
         super("Arm");
@@ -104,9 +104,9 @@ public class Arm extends SubsystemBase{
         .withSpikeThreshold(17)
         .withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(45)
+            .withSupplyCurrentLimit(30)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(60)
+            .withStatorCurrentLimit(30)
             .withStatorCurrentLimitEnable(true)
         ).withTuningEnabled(true);
 
