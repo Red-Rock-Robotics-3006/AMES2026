@@ -31,7 +31,7 @@ public class AutoAlign extends SubsystemBase{
     
     //PID and movement
     private SmartDashboardNumber maxTranslationSpeed = new SmartDashboardNumber("AutoAlign/maxTranslationSpeed", .5);
-    private SmartDashboardNumber maxRotationSpeed = new SmartDashboardNumber("AutoAlign/maxRotationSpeed", 0);
+    private SmartDashboardNumber maxRotationSpeed = new SmartDashboardNumber("AutoAlign/maxRotationSpeed", 0.5);
     private SmartDashboardNumber thetaP = new SmartDashboardNumber("AutoAlign/Theta/thetaP", .1);
     private SmartDashboardNumber thetaD = new SmartDashboardNumber("AutoAlign/Theta/thetaD", 0);
     private PIDController pidY = new PIDController(0, 0, 0);
@@ -87,13 +87,13 @@ public class AutoAlign extends SubsystemBase{
     //sets the target for odometry, resets the PID to clear stored values when aligning to something new, activates PID until aligned or interrupted(if interrupted sets velocities to 0) 
     public Command autoAlignToTarget(boolean angleOnly){
         return angleOnly ?
-            Commands.sequence(Commands.runOnce(() -> setTarget(target), this),
+            Commands.sequence(Commands.runOnce(() -> {}),
                 Commands.runOnce(() -> this.resetPID()),
                 Commands.run(() -> this.alignAngleOnly(), csd)
                 .until(() -> this.alignedToTargetAngleOnly())).
                 finallyDo(() -> csd.setControl(swerveRequest.withVelocityX(0).withVelocityY(0).withRotationalRate(0)))
             :
-            Commands.sequence(Commands.runOnce(() -> setTarget(target), this),
+            Commands.sequence(Commands.runOnce(() -> {}),
                 Commands.runOnce(() -> this.resetPID()),
                 Commands.run(() -> this.align(), csd)
                 .until(() -> this.alignedToTarget())).
@@ -121,7 +121,7 @@ public class AutoAlign extends SubsystemBase{
 
     public boolean alignedToTargetAngleOnly() {
         if(this.relativePose2d == null) return false;
-        return (this.relativePose2d.getRotation().getDegrees() < this.rotationThreshold.getNumber()); 
+        return (Math.abs(this.relativePose2d.getRotation().getDegrees()) < this.rotationThreshold.getNumber()); 
     }
 
     private void setTarget(int target){

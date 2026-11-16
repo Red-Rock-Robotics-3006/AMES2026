@@ -24,6 +24,8 @@ import frc.robot.subsystems.drivetrain.CommandSwerveDrivetrain;
 import frc.robot.subsystems.vision.Odometry;
 import redrocklib.logging.SmartDashboardNumber;
 
+import java.util.Set;
+
 import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModule.DriveRequestType;
 import com.ctre.phoenix6.signals.RobotEnableValue;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -77,7 +79,7 @@ public class RobotContainer {
     
     driveStick.rightStick().onTrue(Commands.runOnce(() ->csd.seedFieldCentric()));
 
-    driveStick.leftBumper().onTrue(superstructure.fullAutoAlignCommand()).onFalse(Commands.runOnce(()->{}, csd));
+    driveStick.leftBumper().whileTrue(Commands.defer(() -> superstructure.fullAutoAlignCommand(), Set.of(csd))).onFalse(Commands.runOnce(()->{}, csd));
 
     // Drivestick bindings
     // driveStick.leftTrigger(0.25) //Shoots with lerp
