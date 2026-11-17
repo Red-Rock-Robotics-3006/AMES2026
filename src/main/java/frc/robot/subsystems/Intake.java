@@ -94,7 +94,7 @@ public class Intake extends SubsystemBase {
 
         if (kEnableIntakeTuning) {
             SmartDashboard.putNumber("intake/real monitoring/motor one speed",intakeMotorOne.motor.getVelocity().getValueAsDouble());
-            SmartDashboard.putNumber("intale/real monitoring/motor two speed", intakeMotorTwo.motor.getVelocity().getValueAsDouble());
+            SmartDashboard.putNumber("intake/real monitoring/motor two speed", intakeMotorTwo.motor.getVelocity().getValueAsDouble());
             SmartDashboard.putNumber("intake/real monitoring/speed ratio", intakeMotorTwo.motor.getVelocity().getValueAsDouble()/intakeMotorOne.motor.getVelocity().getValueAsDouble());
         }
     }

@@ -31,12 +31,19 @@ public class AutoAlign extends SubsystemBase{
     
     //PID and movement
     private SmartDashboardNumber maxTranslationSpeed = new SmartDashboardNumber("AutoAlign/maxTranslationSpeed", .5);
-    private SmartDashboardNumber maxRotationSpeed = new SmartDashboardNumber("AutoAlign/maxRotationSpeed", 0.5);
-    private SmartDashboardNumber thetaP = new SmartDashboardNumber("AutoAlign/Theta/thetaP", .1);
+    private SmartDashboardNumber maxRotationSpeed = new SmartDashboardNumber("AutoAlign/maxRotationSpeed", 1);
+
+    private SmartDashboardNumber thetaP = new SmartDashboardNumber("AutoAlign/Theta/thetaP", 1);
     private SmartDashboardNumber thetaD = new SmartDashboardNumber("AutoAlign/Theta/thetaD", 0);
-    private PIDController pidY = new PIDController(0, 0, 0);
-    private PIDController pidX = new PIDController(0, 0, 0);
     private PIDController pidTheta = new PIDController(thetaP.getNumber(), 0, thetaD.getNumber());
+    
+    private SmartDashboardNumber xP = new SmartDashboardNumber("AutoAlign/X/xP", 1);
+    private SmartDashboardNumber xD = new SmartDashboardNumber("AutoAlign/X/xD", 0);
+    private PIDController pidX = new PIDController(xP.getNumber(), 0, xD.getNumber());
+
+    private SmartDashboardNumber yP = new SmartDashboardNumber("AutoAlign/Y/yP", 1);
+    private SmartDashboardNumber yD = new SmartDashboardNumber("AutoAlign/Y/yD", 0);
+    private PIDController pidY = new PIDController(yP.getNumber(), 0, yD.getNumber());
 
     //Alignment Thresholds
     private SmartDashboardNumber translationThreshold = new SmartDashboardNumber("AutoAlign/translationThreshold", 0);
@@ -73,6 +80,46 @@ public class AutoAlign extends SubsystemBase{
     }
 
 
+    
+
+    //sets the target for odometry, resets the PID to clear stored values when aligning to something new, activates PID until aligned or interrupted(if interrupted sets velocities to 0) 
+    public Command autoAlignToTarget(boolean angleOnly){
+        return angleOnly ?
+            Commands.sequence(Commands.runOnce(() -> {}),
+                Commands.runOnce(() -> this.resetPID()),
+                Commands.run(() -> this.alignAngleOnly(), csd)
+                .until(() -> this.alignedToTargetAngleOnly())).
+                finallyDo(() -> stopAutoAlign())
+            :
+            Commands.sequence(Commands.runOnce(() -> {}),
+                Commands.runOnce(() -> this.resetPID()),
+                Commands.run(() -> this.align(), csd)
+                .until(() -> this.alignedToTarget())).
+                finallyDo(() -> stopAutoAlign());
+    }
+
+    
+
+    public void stopAutoAlign(){
+        SmartDashboard.putBoolean("AutoAlign/accesed", false);
+        SmartDashboard.putBoolean("AutoAlign/alignsAngleOnly", false);
+        csd.setControl(swerveRequest.withVelocityX(0).withVelocityY(0).withRotationalRate(0));
+    }
+
+    
+    public void alignAngleOnly(){
+        if(this.relativePose2d == null){stopAutoAlign(); return;}
+        
+        double thetaRadians = this.relativePose2d.getRotation().getRadians();
+        SmartDashboard.putBoolean("AutoAlign/alignsAngleOnly", true);
+        csd.setControl(swerveRequest.
+                        withVelocityX(0).
+                        withVelocityY(0).
+                        withRotationalRate(getAnglePID(thetaRadians)));
+        SmartDashboard.putNumber("AutoAlign/commandedOmega", getAnglePID(thetaRadians));
+        SmartDashboard.putNumber("AutoAlign/measuredOmega", csd.getState().Speeds.omegaRadiansPerSecond);
+    }
+
     //each tick this method runs while auto aligning. It takes in the dimensions boolean[], which has whether a certain component is aligning(true means aligning), and applies a request to the swerve if the cams have a valid robot pose.
     private void align(){
         if(this.relativePose2d == null) return;
@@ -84,82 +131,68 @@ public class AutoAlign extends SubsystemBase{
 
     }
 
-    //sets the target for odometry, resets the PID to clear stored values when aligning to something new, activates PID until aligned or interrupted(if interrupted sets velocities to 0) 
-    public Command autoAlignToTarget(boolean angleOnly){
-        return angleOnly ?
-            Commands.sequence(Commands.runOnce(() -> {}),
-                Commands.runOnce(() -> this.resetPID()),
-                Commands.run(() -> this.alignAngleOnly(), csd)
-                .until(() -> this.alignedToTargetAngleOnly())).
-                finallyDo(() -> stopAutoAlignCommand())
-            :
-            Commands.sequence(Commands.runOnce(() -> {}),
-                Commands.runOnce(() -> this.resetPID()),
-                Commands.run(() -> this.align(), csd)
-                .until(() -> this.alignedToTarget())).
-                finallyDo(() -> csd.setControl(swerveRequest.withVelocityX(0).withVelocityY(0).withRotationalRate(0)));
-    }
-
-    public Command stopAutoAlignCommand(){
-        SmartDashboard.putBoolean("AutoAlign/accesed", false);
-        SmartDashboard.putBoolean("AutoAlign/alignsAngleOnly", false);
-        return Commands.runOnce(() -> csd.setControl(swerveRequest.withVelocityX(0).withVelocityY(0).withRotationalRate(0)), csd);
-    }
-
-    public void alignAngleOnly(){
-        if(this.relativePose2d == null) return;
-        
-        SmartDashboard.putBoolean("AutoAlign/alignsAngleOnly", true);
-        csd.setControl(swerveRequest.
-                        withVelocityX(0).
-                        withVelocityY(0).
-                        withRotationalRate(getAnglePID(this.relativePose2d.getRotation().getRadians())));
-    }
-
-    public boolean alignedToTarget() {
-        return (Math.abs(this.relativePose2d.getX()) < this.translationThreshold.getNumber()) &&
-               (Math.abs(this.relativePose2d.getY()) < this.translationThreshold.getNumber()) &&
-               (Math.abs(this.relativePose2d.getRotation().getRadians()) < this.rotationThreshold.getNumber()); 
-    }
 
     public boolean alignedToTargetAngleOnly() {
         if(this.relativePose2d == null) return false;
         return (Math.abs(this.relativePose2d.getRotation().getDegrees()) < this.rotationThreshold.getNumber()); 
     }
 
-    private void setTarget(int target){
-        this.target = target;
+    public boolean alignedToTarget() {
+        if(this.relativePose2d == null) return false;
+        return (Math.abs(this.relativePose2d.getX()) < this.translationThreshold.getNumber()) &&
+               (Math.abs(this.relativePose2d.getY()) < this.translationThreshold.getNumber()) &&
+               (Math.abs(this.relativePose2d.getRotation().getRadians()) < this.rotationThreshold.getNumber()); 
     }
-    
+
+
+    //PID Methods
     private void resetPID(){
         this.pidTheta.reset();
         this.pidY.reset();
         this.pidX.reset();
     }
 
+    private void updatePID(){
+        if(thetaP.hasChanged() || thetaD.hasChanged()){
+            pidTheta.setP(this.thetaP.getNumber());
+            pidTheta.setD(this.thetaD.getNumber());
+        }
+        if(yP.hasChanged() || yD.hasChanged()){
+            pidY.setP(this.yP.getNumber());
+            pidY.setD(this.yD.getNumber());
+        }
+        if(xP.hasChanged() || xD.hasChanged()){
+            pidX.setP(this.xP.getNumber());
+            pidX.setD(this.xD.getNumber());
+        }
+    }
+
     @Override
     public void periodic(){
+        updatePID();
         this.target = Superstructure.getDockColumnAsInt();
-        
         //Update odometry values
         Double distFromTarget = null;
         Double angleFromTarget = null;
-        if(target != -1 && odometry.get2dYawToTargetAllCams(target) != null){
+        Rotation2d yaw = target!=-1 ? odometry.get2dYawToTargetAllCams(target):null;
+
+        if(yaw != null){
             distFromTarget = odometry.get2dDistToTargetAllCams(this.target);
-            angleFromTarget = odometry.get2dYawToTargetAllCams(this.target).getRadians();
+            angleFromTarget = yaw.getRadians();
         }
 
         if(distFromTarget == null || angleFromTarget == null){
             this.relativePose2d = null;
         }
         else{
-            this.relativePose2d = new Pose2d(distFromTarget * Math.cos(angleFromTarget), distFromTarget * Math.sin(angleFromTarget), odometry.get2dYawToTargetAllCams(this.target));
+            this.relativePose2d = new Pose2d(distFromTarget * Math.cos(angleFromTarget), distFromTarget * Math.sin(angleFromTarget), yaw);
         }
 
         if(this.relativePose2d != null){
             SmartDashboard.putNumber("AutoAlign/Relative-X-from-Target", this.relativePose2d.getX());
             SmartDashboard.putNumber("AutoAlign/Relative-Y-from-Target", this.relativePose2d.getY());
             SmartDashboard.putNumber("AutoAlign/Relative-Theta-from-Target", this.relativePose2d.getRotation().getDegrees());
+            SmartDashboard.putNumber("AutoAlign/Relative-Theta-from-Target-Radians", this.relativePose2d.getRotation().getRadians());
             SmartDashboard.putBoolean("AutoAlign/alignedToTargetTheta", this.alignedToTargetAngleOnly());
         }
 
