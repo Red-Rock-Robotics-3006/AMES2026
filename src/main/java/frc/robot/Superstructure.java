@@ -127,11 +127,12 @@ public class Superstructure extends SubsystemBase{
     }
     //TODO what does this do?
     public Command fullAutoAlignCommand(){
-        if(!(this.dockColumnTarget != DockColumns.NONE || odometry.get2dDistToTargetAllCams(getIntDockCol(dockColumnTarget)) != null)){
+        if(getIntDockCol(dockColumnTarget)!= -1 && !(this.dockColumnTarget != DockColumns.NONE || odometry.get2dDistToTargetAllCams(getIntDockCol(dockColumnTarget)) != null)){
             // Logger.recordOutput("Superstructure/ Auto Aligning", false);
             return Commands.runOnce(()->{});
         }
         // Logger.recordOutput("Superstructure/ Auto Aligning", true);
+        SmartDashboard.putBoolean("AutoAlign/accesed", true);
         return autoAlign.autoAlignToTarget(true);
                 
     }

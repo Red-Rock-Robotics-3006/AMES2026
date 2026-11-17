@@ -21,9 +21,9 @@ public class Intake extends SubsystemBase {
     private RedRockTalon intakeMotorOne = new RedRockTalon(41, "intake-motor-one"); //TODO: Change the ID to the correct one
     private RedRockTalon intakeMotorTwo = new RedRockTalon(42, "intake-motor-two"); //TODO: Change the ID to the correct one
 
-    private SmartDashboardNumber intakeTargetSpeed = new SmartDashboardNumber("intake/target/intake-speed", -0.3, kEnableIntakeTuning && true); //TODO: Change the default value to the correct one
-    private SmartDashboardNumber intakeTargetSpeedRatio = new SmartDashboardNumber("intake/target/intake-speed-ratio", 1, kEnableIntakeTuning && true); //TODO: Change the default value to the correct one //ratio of the speed of motor 1 to motor 2
-    private SmartDashboardNumber intakeTargetReverseSpeed = new SmartDashboardNumber("intake/target/intake-reverse-speed", 0.3, kEnableIntakeTuning && true); //TODO: Change the default value to the correct one
+    private SmartDashboardNumber intakeTargetSpeed = new SmartDashboardNumber("intake/target/intake-speed", -0.3); //TODO: Change the default value to the correct one
+    private SmartDashboardNumber intakeTargetSpeedRatio = new SmartDashboardNumber("intake/target/intake-speed-ratio", 1); //TODO: Change the default value to the correct one //ratio of the speed of motor 1 to motor 2
+    private SmartDashboardNumber intakeTargetReverseSpeed = new SmartDashboardNumber("intake/target/intake-reverse-speed", 0.3); //TODO: Change the default value to the correct one
 
     public Intake() {
         super();

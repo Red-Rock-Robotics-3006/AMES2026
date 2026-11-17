@@ -91,7 +91,7 @@ public class AutoAlign extends SubsystemBase{
                 Commands.runOnce(() -> this.resetPID()),
                 Commands.run(() -> this.alignAngleOnly(), csd)
                 .until(() -> this.alignedToTargetAngleOnly())).
-                finallyDo(() -> csd.setControl(swerveRequest.withVelocityX(0).withVelocityY(0).withRotationalRate(0)))
+                finallyDo(() -> stopAutoAlignCommand())
             :
             Commands.sequence(Commands.runOnce(() -> {}),
                 Commands.runOnce(() -> this.resetPID()),
@@ -101,12 +101,15 @@ public class AutoAlign extends SubsystemBase{
     }
 
     public Command stopAutoAlignCommand(){
+        SmartDashboard.putBoolean("AutoAlign/accesed", false);
+        SmartDashboard.putBoolean("AutoAlign/alignsAngleOnly", false);
         return Commands.runOnce(() -> csd.setControl(swerveRequest.withVelocityX(0).withVelocityY(0).withRotationalRate(0)), csd);
     }
 
     public void alignAngleOnly(){
         if(this.relativePose2d == null) return;
-
+        
+        SmartDashboard.putBoolean("AutoAlign/alignsAngleOnly", true);
         csd.setControl(swerveRequest.
                         withVelocityX(0).
                         withVelocityY(0).
@@ -141,7 +144,7 @@ public class AutoAlign extends SubsystemBase{
         //Update odometry values
         Double distFromTarget = null;
         Double angleFromTarget = null;
-        if(target != -1){
+        if(target != -1 && odometry.get2dYawToTargetAllCams(target) != null){
             distFromTarget = odometry.get2dDistToTargetAllCams(this.target);
             angleFromTarget = odometry.get2dYawToTargetAllCams(this.target).getRadians();
         }
