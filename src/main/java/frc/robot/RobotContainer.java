@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -46,8 +48,10 @@ public class RobotContainer {
   private final EndEffector endEffector = EndEffector.getInstance();
   private final Arm arm = Arm.getInstance();
   private final Odometry odometry = Odometry.getInstance();
-  private final SwerveRequest.FieldCentric csdRequest = new SwerveRequest.FieldCentric().withDeadband(0.1);
   // private final Autos auto = new Auto();
+  private final SwerveRequest.FieldCentric csdRequest = new SwerveRequest.FieldCentric().withDeadband(0.1);
+  private final SlewRateLimiter rateLimiterX = new SlewRateLimiter(3);
+  private final SlewRateLimiter rateLimiterY = new SlewRateLimiter(3);
   private SmartDashboardNumber maxTranslationProportion = new SmartDashboardNumber("CommandSwerveDrivetrain/maxTranslationProportion", 1);
   private SmartDashboardNumber maxRotationProportion = new SmartDashboardNumber("CommandSwerveDrivetrain/maxRotationProportion", 2);
   
@@ -73,9 +77,7 @@ public class RobotContainer {
   }
   
   private void configureBindings(){
-    csd.setDefaultCommand(csd.applyRequest(() -> csdRequest.withVelocityX(-driveStick.getLeftY()*maxTranslationProportion.getNumber())
-    													   .withVelocityY(-driveStick.getLeftX()*maxTranslationProportion.getNumber())
-														   .withRotationalRate(-driveStick.getRightX()*maxRotationProportion.getNumber())));
+    setCSDDefaults();
     
     driveStick.rightStick().onTrue(Commands.runOnce(() ->csd.seedFieldCentric()));
 
@@ -203,6 +205,19 @@ public class RobotContainer {
     // testStick.leftTrigger()
     //   .onTrue(intake.reverseIntakeCommand())
     //   .onFalse(intake.stopIntakeCommand());
+  }
+
+  public double smoothenDriverInput(double x, SlewRateLimiter rateLimiter){
+    x = MathUtil.applyDeadband(x, 0.1);
+    x = x*x*x*0.5 + x*0.5;
+    return rateLimiter.calculate(x);
+  }
+  public void setCSDDefaults(){
+    
+    csd.setDefaultCommand(csd.applyRequest(
+      () -> csdRequest.withVelocityX(smoothenDriverInput(-driveStick.getLeftY(), rateLimiterX)*maxTranslationProportion.getNumber())
+            .withVelocityY(smoothenDriverInput(-driveStick.getLeftX(), rateLimiterY)*maxTranslationProportion.getNumber())
+						.withRotationalRate(-driveStick.getRightX()*maxRotationProportion.getNumber())));
   }
 
   public Command getAutonomousCommand() {
