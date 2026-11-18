@@ -40,9 +40,11 @@ public class EndEffector extends SubsystemBase{
     private SmartDashboardNumber intakeVelocity = new SmartDashboardNumber("EndEffector/intaking-velocity", -200);
     private SmartDashboardNumber outakeVelocity = new SmartDashboardNumber("EndEffector/outaking-velocity", 500);
     private SmartDashboardNumber keepPieceInSpeed = new SmartDashboardNumber("EndEffector/keep-pieces-in-end-effector-velocity", 10);
-    private SmartDashboardNumber currentLimit = new SmartDashboardNumber("EndEffector/current-limit", 60);
+    private SmartDashboardNumber currentLimit = new SmartDashboardNumber("EndEffector/current-limit", 90);
     private SmartDashboardNumber testSpeed = new SmartDashboardNumber("EndEffector/test-speed", 2500);
     private SmartDashboardNumber testIntakeSpeed = new SmartDashboardNumber("EndEffector/test-intake-speed", -200);
+
+    private boolean accessedSpeed = false;
 
     public EndEffector(){
         this.endEffectMotor
@@ -76,9 +78,9 @@ public class EndEffector extends SubsystemBase{
         .withSpikeThreshold(17)
         .withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(100)
+            .withSupplyCurrentLimit(120)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(100)
+            .withStatorCurrentLimit(120)
             .withStatorCurrentLimitEnable(true)
         ).withTuningEnabled(true);
     }
@@ -111,6 +113,13 @@ public class EndEffector extends SubsystemBase{
     public Command shootTestCommand(){
         return Commands.sequence(
             Commands.runOnce(() -> this.setSpeed(this.testSpeed.getNumber()), this),
+            Commands.runOnce(() -> accessedSpeed = true),
+            Commands.runOnce(() -> intakeState = IntakeState.NOTHING)
+        );
+    }
+    public Command shootTestCommand2(double velocity){
+        return Commands.sequence(
+            Commands.runOnce(() -> this.setSpeed(velocity), this),
             Commands.runOnce(() -> intakeState = IntakeState.NOTHING)
         );
     }
@@ -166,7 +175,8 @@ public class EndEffector extends SubsystemBase{
             () -> {}, 
             (interrupted) -> {
                 this.stop();
-                intakeState = IntakeState.INTAKE_SHELL;
+                if(!interrupted)
+                    intakeState = IntakeState.INTAKE_SHELL;
             },
             () -> {
                 return this.endEffectMotor.motor.getSupplyCurrent().getValueAsDouble() > this.currentLimit.getNumber();
@@ -187,6 +197,8 @@ public class EndEffector extends SubsystemBase{
         SmartDashboard.putNumber("EndEffector/supply-current", this.endEffectMotor.motor.getSupplyCurrent().getValueAsDouble());
         SmartDashboard.putNumber("EndEffector/velocity", this.endEffectMotor.motor.getVelocity().getValueAsDouble());
         SmartDashboard.putNumber("EndEffector/acceleration", this.endEffectMotor.motor.getAcceleration().getValueAsDouble());
+    
+        SmartDashboard.putBoolean("Superstructure/accessed-endeffector-speed", accessedSpeed);
     }
 
     public static EndEffector getInstance(){

@@ -36,9 +36,9 @@ public class Intake extends SubsystemBase {
             .withPeakReverseDutyCycle(-1d)
             .withNeutralMode(NeutralModeValue.Brake)
         ).withCurrentLimitConfigs(new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(40)
+            .withSupplyCurrentLimit(60)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(80)
+            .withStatorCurrentLimit(100)
             .withStatorCurrentLimitEnable(true)
         );
 
@@ -50,9 +50,9 @@ public class Intake extends SubsystemBase {
             .withPeakReverseDutyCycle(-1d)
             .withNeutralMode(NeutralModeValue.Brake)
         ).withCurrentLimitConfigs(new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(40)
+            .withSupplyCurrentLimit(60)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(80)
+            .withStatorCurrentLimit(100)
             .withStatorCurrentLimitEnable(true)
         );
     }

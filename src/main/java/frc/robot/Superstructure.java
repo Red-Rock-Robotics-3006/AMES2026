@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.util.Set;
+
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.Logger;
 
@@ -60,9 +62,9 @@ public class Superstructure extends SubsystemBase{
     //ARM
 
     //LERP disable poses
-    private SmartDashboardNumber l1ArmPos = new SmartDashboardNumber("ArmPoses/Positions/L1", 0); //TODO
-    private SmartDashboardNumber l2ArmPos = new SmartDashboardNumber("ArmPoses/Positions/L2", 0); //TODO
-    private SmartDashboardNumber l3ArmPos = new SmartDashboardNumber("ArmPoses/Positions/L3", 0); //TODO
+    private SmartDashboardNumber l1ArmPos = new SmartDashboardNumber("ArmPoses/Positions/L1", 0.15); //TODO
+    private SmartDashboardNumber l2ArmPos = new SmartDashboardNumber("ArmPoses/Positions/L2", 0.21); //TODO
+    private SmartDashboardNumber l3ArmPos = new SmartDashboardNumber("ArmPoses/Positions/L3", 0.28); //TODO
     
     //Static arm locations
     private SmartDashboardNumber shelfArmPos = new SmartDashboardNumber("ArmPoses/Positions/shelf", 0.1); 
@@ -84,11 +86,9 @@ public class Superstructure extends SubsystemBase{
     SmartDashboardNumber intakeShellSourceVel = new SmartDashboardNumber("EndEffectorSpeeds/intakeShellSourceVel", 0);//TODO
 
     //LERP disable velocities
-    SmartDashboardNumber staticL1Vel = new SmartDashboardNumber("EndEffectorSpeeds/staticL1Vel", 0);//TODO
-    SmartDashboardNumber staticL2Vel = new SmartDashboardNumber("EndEffectorSpeeds/staticL2Vel", 0);//TODO
-    SmartDashboardNumber staticL3Vel = new SmartDashboardNumber("EndEffectorSpeeds/staticL3Vel", 0);//TODO
-
-    //Intake
+    SmartDashboardNumber staticL1Vel = new SmartDashboardNumber("EndEffectorSpeeds/staticL1Vel", 200);
+    SmartDashboardNumber staticL2Vel = new SmartDashboardNumber("EndEffectorSpeeds/staticL2Vel", 650);
+    SmartDashboardNumber staticL3Vel = new SmartDashboardNumber("EndEffectorSpeeds/staticL3Vel", 2500);
 
     //Odometry
     public static enum DockColumns{
@@ -229,7 +229,7 @@ public class Superstructure extends SubsystemBase{
                 return 0.0;
         }
     }
-    private double stateToVelocitySTATIC(Superstructure.RobotState state){
+    public double stateToVelocitySTATIC(Superstructure.RobotState state){
         switch(state){
             case L1:
                 return this.staticL1Vel.getNumber();
@@ -265,9 +265,19 @@ public class Superstructure extends SubsystemBase{
     }
 
     public Command endEffectCommand(){
-        return Commands.runOnce(() -> this.endEffector.shootCommand(stateToVelocity(this.wantedState, this.distanceFromTarget)), endEffector);
+        return Commands.defer(
+            () -> this.endEffector.shootCommand(stateToVelocity(this.wantedState, this.distanceFromTarget)), 
+            Set.of(this)
+        );
     }
-
+    
+    public Command endEffectStaticCommand(){
+        return Commands.defer(
+            () -> this.endEffector.shootCommand(stateToVelocitySTATIC(this.wantedState)), 
+            Set.of(this)
+        );
+    }
+    
     //Superstructure-specific commands
     
     public void setWantedRobotState(RobotState state){
@@ -311,7 +321,7 @@ public class Superstructure extends SubsystemBase{
                 return arm.atWantedArmPos(this.stateToArmPosStatic(state));
             },
             this, arm, endEffector
-        );
+            );
     }
 
     public Command goToArmPosCommand(RobotState state, double dist){
@@ -330,12 +340,12 @@ public class Superstructure extends SubsystemBase{
             this, arm, endEffector
         );
     }
-
+    
     public Command goToIntakePos(){
         if(endEffector.getIntakeState() == IntakeState.NOTHING)
             return this.goToArmPosStaticCommand(RobotState.INTAKING_SHELL);
         else
-            return this.goToArmPosStaticCommand(RobotState.INTAKING_CELL);
+        return this.goToArmPosStaticCommand(RobotState.INTAKING_CELL);
     }
     
     public Command idleCommand(){
@@ -352,7 +362,7 @@ public class Superstructure extends SubsystemBase{
 
     //since cases are very similar let similar cases fall through to the next, it will end at the break
     // private Command goToWantedState(){
-    //     switch(this.wantedState){
+        //     switch(this.wantedState){
     //         case L1:
     //         case L2:
     //         case L3:
@@ -393,8 +403,9 @@ public class Superstructure extends SubsystemBase{
             ?odometry.get2dDistToTargetAllCams(this.getIntDockCol(dockColumnTarget)) == null
                 ? -1
                 : odometry.get2dDistToTargetAllCams(this.getIntDockCol(dockColumnTarget))
-            :-1;
+                :-1;
         SmartDashboard.putNumber("Superstructure/distanceFromTarget", distanceFromTarget);
+        SmartDashboard.putString("Superstructure/wantedState", this.wantedState.toString());
         //used to check when new button has been pressed and runs a command scheduler
         // if(lastState == null || wantedState != lastState){
         //     lastState = wantedState;

@@ -84,25 +84,27 @@ public class RobotContainer {
     driveStick.leftBumper().whileTrue(Commands.defer(() -> superstructure.fullAutoAlignCommand(), Set.of(csd))).onFalse(Commands.runOnce(()->{}, csd));
 
     // Drivestick bindings
-    // driveStick.leftTrigger(0.25) //Shoots with lerp
-    //   .onTrue(
-    //     superstructure.endEffectCommand()
-    //       .onlyIf(() -> odometry.get2dDistToTargetAllCams(superstructure.getIntDockCol(superstructure.getDockColumn())) <= 5))
-    //   .onFalse(endEffector.stopEndEffectorCommand());
+    driveStick.leftTrigger(0.25) //Shoots with lerp
+      .onTrue(
+        superstructure.endEffectStaticCommand())
+          // .onlyIf(() -> odometry.get2dDistToTargetAllCams(superstructure.getIntDockCol(superstructure.getDockColumn())) <= 5))
+      .onFalse(endEffector.stopEndEffectorCommand());
     
     driveStick.rightTrigger(0.25)
       .onTrue(Commands.sequence(
-        // endEffector.runIntakeTestCommand(), 
-        endEffector.intakeCommand(),
+        endEffector.shootTestCommand()
+      ))
+      .onFalse(endEffector.stopEndEffectorCommand());
+    driveStick.rightBumper()
+      .onTrue(Commands.sequence(
+        endEffector.runIntakeTestCommand(), 
         intake.startIntakeCommand())
       )
       .onFalse(intake.stopIntakeCommand());
 
-    driveStick.leftTrigger(0.25)
-      .onTrue(endEffector.shootTestCommand())
-      .onFalse(endEffector.stopEndEffectorCommand());
-
-    
+    // driveStick.leftTrigger(0.25)
+    //   .onTrue(endEffector.shootTestCommand2(superstructure.stateToVelocitySTATIC(superstructure.getWantedState())))
+    //   .onFalse(endEffector.stopEndEffectorCommand());
 
     //Set which column of dock targets to target when auto aligning
     mechStick.povCenter()
@@ -123,9 +125,10 @@ public class RobotContainer {
       .onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
 
 	//x=L1, y=L2, b=L3, a=shelf
-    mechStick.x()
-      .onTrue(superstructure.goToArmPosCommand(RobotState.L1, superstructure.getDistToTarget()))
-      .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_SHELL));
+  mechStick.x()
+    .onTrue(superstructure.goToArmPosStaticCommand(RobotState.L1))
+    // .onTrue(superstructure.goToArmPosCommand(RobotState.L1, superstructure.getDistToTarget()))
+    .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_SHELL));
     mechStick.y()
       .onTrue(superstructure.goToArmPosCommand(RobotState.L2, superstructure.getDistToTarget()))
       .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_SHELL));
