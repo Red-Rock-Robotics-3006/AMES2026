@@ -105,9 +105,9 @@ public class Superstructure extends SubsystemBase{
         return dockColumnTarget;
     }
 
-    public static int getDockColumnAsInt(){
-        return getInstance().getIntDockCol(getInstance().getDockColumn());
-    }
+    // public static int getDockColumnAsInt(){
+    //     return Superstructure.getInstance().getIntDockCol(Superstructure.getInstance().getDockColumn());
+    // }
 
     public int getIntDockCol(DockColumns dockCol){
         switch(dockCol){
