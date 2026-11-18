@@ -36,9 +36,9 @@ import choreo.auto.AutoFactory;
 
 
 public class RobotContainer {
-  private final static CommandXboxController testStick = new CommandXboxController(0);
+  private final static CommandXboxController testStick = new CommandXboxController(10);
   public final static CommandXboxController driveStick = new CommandXboxController(1);
-  public final static CommandXboxController mechStick = new CommandXboxController(2);
+  public final static CommandXboxController mechStick = new CommandXboxController(0);
   
   private final CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
   private SmartDashboardNumber testEEvel = new SmartDashboardNumber("RobotContainer/testEEvel", 0);
@@ -108,19 +108,19 @@ public class RobotContainer {
     mechStick.povCenter()
       	.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE)));
     mechStick.povUp()
-      .onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.LEFT), superstructure))
-      .onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
+      .onTrue(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.LEFT);SmartDashboard.putNumber("Superstructure/dockTargetInt", superstructure.getIntDockCol(DockColumns.LEFT));}, superstructure))
+      .onFalse(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.NONE);SmartDashboard.putNumber("Superstructure/dockTargetInt", -1);}, superstructure));
 
     mechStick.povLeft()
-      .onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.LEFT_MID), superstructure))
-      .onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
+      .onTrue(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.LEFT_MID);SmartDashboard.putNumber("Superstructure/dockTargetInt", superstructure.getIntDockCol(DockColumns.LEFT_MID));}, superstructure))
+      .onFalse(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.NONE);SmartDashboard.putNumber("Superstructure/dockTargetInt", -1);}, superstructure));
 
     mechStick.povRight()
-      .onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.RIGHT_MID), superstructure))
-      .onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
+      .onTrue(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.RIGHT_MID);SmartDashboard.putNumber("Superstructure/dockTargetInt", superstructure.getIntDockCol(DockColumns.RIGHT_MID));}, superstructure))
+      .onFalse(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.NONE);SmartDashboard.putNumber("Superstructure/dockTargetInt", -1);}, superstructure));
     mechStick.povDown()
-      .onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.RIGHT), superstructure))
-      .onFalse(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE), superstructure));
+      .onTrue(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.RIGHT);SmartDashboard.putNumber("Superstructure/dockTargetInt", superstructure.getIntDockCol(DockColumns.RIGHT));}, superstructure))
+      .onFalse(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.NONE);SmartDashboard.putNumber("Superstructure/dockTargetInt", -1);}, superstructure));
 
 	//x=L1, y=L2, b=L3, a=shelf
     mechStick.x()

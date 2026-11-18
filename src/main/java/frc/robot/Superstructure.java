@@ -105,9 +105,9 @@ public class Superstructure extends SubsystemBase{
         return dockColumnTarget;
     }
 
-    public static int getDockColumnAsInt(){
-        return getInstance().getIntDockCol(getInstance().getDockColumn());
-    }
+    // public static int getDockColumnAsInt(){
+    //     return Superstructure.getInstance().getIntDockCol(Superstructure.getInstance().getDockColumn());
+    // }
 
     public int getIntDockCol(DockColumns dockCol){
         switch(dockCol){
@@ -395,6 +395,8 @@ public class Superstructure extends SubsystemBase{
                 : odometry.get2dDistToTargetAllCams(this.getIntDockCol(dockColumnTarget))
             :-1;
         SmartDashboard.putNumber("Superstructure/distanceFromTarget", distanceFromTarget);
+
+        // SmartDashboard.putNumber("Superstructure/dockTargetInt", getIntDockCol(dockColumnTarget));
         //used to check when new button has been pressed and runs a command scheduler
         // if(lastState == null || wantedState != lastState){
         //     lastState = wantedState;

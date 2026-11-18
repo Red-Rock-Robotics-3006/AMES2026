@@ -31,9 +31,9 @@ public class AutoAlign extends SubsystemBase{
     
     //PID and movement
     private SmartDashboardNumber maxTranslationSpeed = new SmartDashboardNumber("AutoAlign/maxTranslationSpeed", .5);
-    private SmartDashboardNumber maxRotationSpeed = new SmartDashboardNumber("AutoAlign/maxRotationSpeed", 1);
+    private SmartDashboardNumber maxRotationSpeed = new SmartDashboardNumber("AutoAlign/maxRotationSpeed", 2);
 
-    private SmartDashboardNumber thetaP = new SmartDashboardNumber("AutoAlign/Theta/thetaP", 1);
+    private SmartDashboardNumber thetaP = new SmartDashboardNumber("AutoAlign/Theta/thetaP", 3);
     private SmartDashboardNumber thetaD = new SmartDashboardNumber("AutoAlign/Theta/thetaD", 0);
     private PIDController pidTheta = new PIDController(thetaP.getNumber(), 0, thetaD.getNumber());
     
@@ -47,7 +47,7 @@ public class AutoAlign extends SubsystemBase{
 
     //Alignment Thresholds
     private SmartDashboardNumber translationThreshold = new SmartDashboardNumber("AutoAlign/translationThreshold", 0);
-    private SmartDashboardNumber rotationThreshold = new SmartDashboardNumber("AutoAlign/rotationThreshold", 5);
+    private SmartDashboardNumber rotationThreshold = new SmartDashboardNumber("AutoAlign/rotationThreshold", 1);
     
     //Interfacing with CSD, this is a robot centric pose because this uses 2d tracking
     private final SwerveRequest.RobotCentric swerveRequest = new SwerveRequest.RobotCentric();
@@ -170,11 +170,13 @@ public class AutoAlign extends SubsystemBase{
     @Override
     public void periodic(){
         updatePID();
-        this.target = Superstructure.getDockColumnAsInt();
+        this.target = (int) SmartDashboard.getNumber("Superstructure/dockTargetInt", -1);
+
         //Update odometry values
         Double distFromTarget = null;
         Double angleFromTarget = null;
         Rotation2d yaw = target!=-1 ? odometry.get2dYawToTargetAllCams(target):null;
+        SmartDashboard.putNumber("AutoAlign/Theoretical-target", target);
 
         if(yaw != null){
             distFromTarget = odometry.get2dDistToTargetAllCams(this.target);
@@ -194,6 +196,8 @@ public class AutoAlign extends SubsystemBase{
             SmartDashboard.putNumber("AutoAlign/Relative-Theta-from-Target", this.relativePose2d.getRotation().getDegrees());
             SmartDashboard.putNumber("AutoAlign/Relative-Theta-from-Target-Radians", this.relativePose2d.getRotation().getRadians());
             SmartDashboard.putBoolean("AutoAlign/alignedToTargetTheta", this.alignedToTargetAngleOnly());
+            for(int n = 0; n<4; n++)
+            SmartDashboard.putNumber("AutoAlign/TargetAngles/Relative-Angle-From-Target-" + n, odometry.get2dYawToTargetAllCams(n).getDegrees());
         }
 
     }
