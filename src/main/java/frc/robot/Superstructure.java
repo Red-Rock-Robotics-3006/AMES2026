@@ -63,16 +63,16 @@ public class Superstructure extends SubsystemBase{
 
     //LERP disable poses
     private SmartDashboardNumber l1ArmPos = new SmartDashboardNumber("ArmPoses/Positions/L1", 0.15); //TODO
-    private SmartDashboardNumber l2ArmPos = new SmartDashboardNumber("ArmPoses/Positions/L2", 0.21); //TODO
-    private SmartDashboardNumber l3ArmPos = new SmartDashboardNumber("ArmPoses/Positions/L3", 0.28); //TODO
+    private SmartDashboardNumber l2ArmPos = new SmartDashboardNumber("ArmPoses/Positions/L2", 0.22); //TODO
+    private SmartDashboardNumber l3ArmPos = new SmartDashboardNumber("ArmPoses/Positions/L3", 0.255); //TODO
     
     //Static arm locations
-    private SmartDashboardNumber shelfArmPos = new SmartDashboardNumber("ArmPoses/Positions/shelf", 0.1); 
-    private SmartDashboardNumber sourceShellArmPos = new SmartDashboardNumber("ArmPoses/Positions/source-shell", 0); //TODO
-    private SmartDashboardNumber sourceCellArmPos = new SmartDashboardNumber("ArmPoses/Positions/source-cell", 0); //TODO
+    private SmartDashboardNumber shelfArmPos = new SmartDashboardNumber("ArmPoses/Positions/shelf", 0.12); 
+    private SmartDashboardNumber sourceShellArmPos = new SmartDashboardNumber("ArmPoses/Positions/source-shell", 0.5); //TODO
+    private SmartDashboardNumber sourceCellArmPos = new SmartDashboardNumber("ArmPoses/Positions/source-cell", 0.5); //TODO
     private SmartDashboardNumber stowArmPos = new SmartDashboardNumber("ArmPoses/Positions/stow", 0); 
     private SmartDashboardNumber intakeShellPos = new SmartDashboardNumber("ArmPoses/Positions/intake-shell-pos", 0.64); 
-    private SmartDashboardNumber intakeCellPos = new SmartDashboardNumber("ArmPoses/Positions/intake-cell-pos", 0.58);
+    private SmartDashboardNumber intakeCellPos = new SmartDashboardNumber("ArmPoses/Positions/intake-cell-pos", 0.59);
     private SmartDashboardNumber intermediatePos = new SmartDashboardNumber("ArmPoses/Positions/intermediate", 0.3);
     private SmartDashboardNumber test = new SmartDashboardNumber("ArmPoses/Positions/test", 0.28);
     //EndEffector
@@ -81,14 +81,14 @@ public class Superstructure extends SubsystemBase{
     SmartDashboardNumber intakingVel = new SmartDashboardNumber("EndEffectorSpeeds/intakingVel", -1200);
     SmartDashboardNumber intakingCellVel = new SmartDashboardNumber("EndEffectorSpeeds/intakingCellVel", 0);//TODO
     SmartDashboardNumber intakingShellVel = new SmartDashboardNumber("EndEffectorSpeeds/intakingShellVel", 0);//TODO
-    SmartDashboardNumber scoreShelfVel = new SmartDashboardNumber("EndEffectorSpeeds/scoreShelfVel", 0);//TODO
-    SmartDashboardNumber intakeCellSourceVel = new SmartDashboardNumber("EndEffectorSpeeds/intakeCellSourceVel", 0);//TODO
-    SmartDashboardNumber intakeShellSourceVel = new SmartDashboardNumber("EndEffectorSpeeds/intakeShellSourceVel", 0);//TODO
+    SmartDashboardNumber scoreShelfVel = new SmartDashboardNumber("EndEffectorSpeeds/scoreShelfVel", 400);//TODO
+    SmartDashboardNumber intakeCellSourceVel = new SmartDashboardNumber("EndEffectorSpeeds/intakeCellSourceVel", -200);//TODO
+    SmartDashboardNumber intakeShellSourceVel = new SmartDashboardNumber("EndEffectorSpeeds/intakeShellSourceVel", -200);//TODO
 
     //LERP disable velocities
     SmartDashboardNumber staticL1Vel = new SmartDashboardNumber("EndEffectorSpeeds/staticL1Vel", 200);
     SmartDashboardNumber staticL2Vel = new SmartDashboardNumber("EndEffectorSpeeds/staticL2Vel", 650);
-    SmartDashboardNumber staticL3Vel = new SmartDashboardNumber("EndEffectorSpeeds/staticL3Vel", 2500);
+    SmartDashboardNumber staticL3Vel = new SmartDashboardNumber("EndEffectorSpeeds/staticL3Vel", 1100);
 
     //Odometry
     public static enum DockColumns{
@@ -234,7 +234,7 @@ public class Superstructure extends SubsystemBase{
             case L1:
                 return this.staticL1Vel.getNumber();
             case L2: 
-                return this.staticL1Vel.getNumber();
+                return this.staticL2Vel.getNumber();
             case L3:
                 return this.staticL3Vel.getNumber();
             case INTAKING_CELL:
@@ -308,19 +308,21 @@ public class Superstructure extends SubsystemBase{
 
     //when arm is moving endeffector slowly pushes piece out so compensate with low reversing speed 
     public Command goToArmPosStaticCommand(RobotState state){
-        return new FunctionalCommand( 
-            () -> {
-                arm.armToPos(this.stateToArmPosStatic(state));
-                this.setWantedRobotState(state);
-            },
-            () -> endEffector.setSpeed(-arm.getPivotVelocity()*(3.0/64.0)),
-            (interrupted) -> {
-                endEffector.setSpeed(0);
-            },
-            () -> {
-                return arm.atWantedArmPos(this.stateToArmPosStatic(state));
-            },
-            this, arm, endEffector
+        return Commands.defer( 
+            () -> new FunctionalCommand( 
+                () -> {
+                    arm.armToPos(this.stateToArmPosStatic(state));
+                    this.setWantedRobotState(state);
+                },
+                () -> endEffector.setSpeed(-arm.getPivotVelocity()*(3.0/64.0)),
+                (interrupted) -> {
+                    endEffector.setSpeed(0);
+                },
+                () -> {
+                    return arm.atWantedArmPos(this.stateToArmPosStatic(state));
+                },
+                this, arm, endEffector),
+                Set.of(this, arm, endEffector)
             );
     }
 

@@ -199,6 +199,7 @@ public class EndEffector extends SubsystemBase{
         SmartDashboard.putNumber("EndEffector/acceleration", this.endEffectMotor.motor.getAcceleration().getValueAsDouble());
     
         SmartDashboard.putBoolean("Superstructure/accessed-endeffector-speed", accessedSpeed);
+        SmartDashboard.putString("Superstructure", intakeState.toString());
     }
 
     public static EndEffector getInstance(){

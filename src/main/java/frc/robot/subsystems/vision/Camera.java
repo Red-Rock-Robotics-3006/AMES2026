@@ -1,5 +1,6 @@
 package frc.robot.subsystems.vision;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -17,6 +18,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Superstructure.DockColumns;
@@ -30,13 +32,14 @@ public class Camera extends SubsystemBase{
     private PhotonTrackedTarget target;
     private Pose2d visionPos;
     private Pose2d robotPos;
+    private Field2d fieldPosC = new Field2d();   
     private int[] validTags = {4, 8};
     private Transform3d robotToCamera;
 
 
     private Pose3d[] tagPose3ds = { //TODO use field cad
-        new Pose3d(new Translation3d(9.3340855482, 5.0668855482, 0.6096), new Rotation3d(Math.PI/2, 0, (3*Math.PI)/4)), //red (roll: 90 deg, yaw: 135 deg)
-        new Pose3d(new Translation3d(7.1251144518, 2.8579144518, 0.6096), new Rotation3d(Math.PI/2, 0, -Math.PI/4))  //blue (roll: 90 deg, yaw: 135 deg)  
+        new Pose3d(new Translation3d(9.3340855482, 5.0668855482, 0.6096), new Rotation3d(0, 0, (3*Math.PI)/4)), //red (roll: 90 deg, yaw: 135 deg)
+        new Pose3d(new Translation3d(7.1251144518, 2.8579144518, 0.6096), new Rotation3d(0, 0, -(Math.PI)/4))  //blue (roll: 90 deg, yaw: 135 deg)  
     };
 
 
@@ -68,15 +71,17 @@ public class Camera extends SubsystemBase{
     private Supplier<Rotation2d> gyroAngle;
 
     private SmartDashboardNumber maxAmbiguity = new SmartDashboardNumber("Camera/max-ambiguity", 0.2);
-    private SmartDashboardNumber maxDistFromTagTakingMeas = new SmartDashboardNumber("Camera/max-distance-from-tag", 3); //10 feet in meters
+    private SmartDashboardNumber maxDistFromTagTakingMeas = new SmartDashboardNumber("Camera/max-distance-from-tag", 5); //in meters
    
     private SmartDashboardBoolean isRedAlliance = new SmartDashboardBoolean("Camera/is-red-alliance", true);
 
+    private String cameraName;
 
     public Camera(String camName, Supplier<Rotation2d> gyroAngle, double x, double y, double z, double roll, double pitch, double yaw){
         super("Camera: " + camName);
 
         this.gyroAngle = gyroAngle;
+        this.cameraName = camName;
 
         cam = new PhotonCamera(camName);
         List<PhotonPipelineResult> unreadResults = cam.getAllUnreadResults();
@@ -150,6 +155,7 @@ public class Camera extends SubsystemBase{
         if(!unreadResults.isEmpty()){
             result = unreadResults.get(unreadResults.size() -1);
             latestResultTimeStamp = result.getTimestampSeconds();
+            
             target = result.hasTargets()? result.getBestTarget(): null;
             if(target != null){
                 SmartDashboard.putNumber("Camera/targetTag/-pitch", target.getPitch());
@@ -175,7 +181,7 @@ public class Camera extends SubsystemBase{
             visionPos = PhotonUtils.estimateFieldToRobotAprilTag(
                 validTagMeasures, 
                 tagPose3ds[idx], 
-                robotToCamera.inverse()
+                robotToCamera
             ).toPose2d();
         }
         else{
@@ -183,5 +189,9 @@ public class Camera extends SubsystemBase{
         }
         
         robotPos = visionPos != null? new Pose2d(visionPos.getTranslation(), gyroAngle.get()): null;
-    }
+        if(robotPos != null){
+            fieldPosC.setRobotPose(robotPos);
+            SmartDashboard.putData("Camera/" + cameraName + "/camera-field-pos", fieldPosC);
+        }
+    }   
 }

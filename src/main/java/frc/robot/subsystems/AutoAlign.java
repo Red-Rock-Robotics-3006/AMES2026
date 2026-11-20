@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.subsystems.vision.Odometry;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -28,6 +29,8 @@ import redrocklib.logging.SmartDashboardNumber;
 public class AutoAlign extends SubsystemBase{
     private static AutoAlign instance = null;
     CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
+    
+    private Field2d field2d = new Field2d();
     
     //PID and movement
     private SmartDashboardNumber maxTranslationSpeed = new SmartDashboardNumber("AutoAlign/maxTranslationSpeed", .5);
@@ -108,7 +111,10 @@ public class AutoAlign extends SubsystemBase{
 
     
     public void alignAngleOnly(){
-        if(this.relativePose2d == null){stopAutoAlign(); return;}
+        if(this.relativePose2d == null){
+            stopAutoAlign(); 
+            return;
+        }
         
         double thetaRadians = this.relativePose2d.getRotation().getRadians();
         SmartDashboard.putBoolean("AutoAlign/alignsAngleOnly", true);
@@ -191,6 +197,8 @@ public class AutoAlign extends SubsystemBase{
         }
 
         if(this.relativePose2d != null){
+            field2d.setRobotPose(relativePose2d);
+            SmartDashboard.putData("AutoAlign/relative-field-pos", field2d);
             SmartDashboard.putNumber("AutoAlign/Relative-X-from-Target", this.relativePose2d.getX());
             SmartDashboard.putNumber("AutoAlign/Relative-Y-from-Target", this.relativePose2d.getY());
             SmartDashboard.putNumber("AutoAlign/Relative-Theta-from-Target", this.relativePose2d.getRotation().getDegrees());

@@ -30,7 +30,7 @@ public class Autos {
     //     this.factory = factory;
     // }
 
-    //Moves 5 feet at 1 m/s
+    //Moves 5 feet at 0.5 m/s
     public Command testSlowAuto(){
         return 
             Commands.sequence(

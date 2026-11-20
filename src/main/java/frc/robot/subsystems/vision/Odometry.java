@@ -9,6 +9,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.math.numbers.N1; 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -32,8 +33,8 @@ public class Odometry extends SubsystemBase{
         super("Odometry");
 
         Supplier<Rotation2d> gyrRotation = () -> csd.getState().Pose.getRotation();
-        cameras.add(new Camera("LeftCam", gyrRotation, -.287, -.315, 0.19, Units.degreesToRadians(180), -Units.degreesToRadians(70), Units.degreesToRadians(-20))); //TODO name and add vals to cams
-        cameras.add(new Camera("RightCam", gyrRotation, .287, -.315, 0.19, Units.degreesToRadians(180), -Units.degreesToRadians(70), Units.degreesToRadians(20)));
+        cameras.add(new Camera("LeftCam", gyrRotation, 0.315, -0.287, 0.19, Units.degreesToRadians(0), -Units.degreesToRadians(70), Units.degreesToRadians(20))); //TODO name and add vals to cams
+        cameras.add(new Camera("RightCam", gyrRotation, -0.315, -0.287, 0.19, Units.degreesToRadians(0), -Units.degreesToRadians(70), Units.degreesToRadians(-20)));
     
     }
 
