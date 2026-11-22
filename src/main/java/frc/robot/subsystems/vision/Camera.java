@@ -42,20 +42,20 @@ public class Camera extends SubsystemBase{
         new Pose3d(new Translation3d(7.1251144518, 2.8579144518, 0.6096), new Rotation3d(0, 0, -(Math.PI)/4))  //blue (roll: 90 deg, yaw: 135 deg)  
     };
 
-
+    Rotation2d blueDockAngle = Rotation2d.fromDegrees(-45);
     private Pose2d[] blueDockTargets = { //TODO use field cad
-        new Pose2d(6.558322799,  3.3726817484, Rotation2d.fromDegrees(-45)), //furthest to the left facing dock
-        new Pose2d(6.923765807, 3.0103228592, Rotation2d.fromDegrees(-45)),
-        new Pose2d(7.2767015756, 2.6513847404, Rotation2d.fromDegrees(-45)),
-        new Pose2d(7.6421862904, 2.2953930978, Rotation2d.fromDegrees(-45))
+        new Pose2d(6.558322799,  3.3726817484, blueDockAngle), //furthest to the left facing dock
+        new Pose2d(6.923765807, 3.0103228592, blueDockAngle),
+        new Pose2d(7.2767015756, 2.6513847404, blueDockAngle),
+        new Pose2d(7.6421862904, 2.2953930978, blueDockAngle)
     };
 
-
+    Rotation2d redDockAngle =  Rotation2d.fromDegrees(135);
     private Pose2d[] redDockTargets = {
-        new Pose2d(9.8613397134, 4.5168199732, Rotation2d.fromDegrees(135)), //furthest to the left looking at the doc
-        new Pose2d(9.5021361392, 4.8759766844, Rotation2d.fromDegrees(135)),
-        new Pose2d(9.1429333778, 5.2351532838, Rotation2d.fromDegrees(135)),
-        new Pose2d(8.7837315308, 5.5943176404, Rotation2d.fromDegrees(135))
+        new Pose2d(9.8613397134, 4.5168199732, redDockAngle), //furthest to the left looking at the doc
+        new Pose2d(9.5021361392, 4.8759766844,redDockAngle),
+        new Pose2d(9.1429333778, 5.2351532838, redDockAngle),
+        new Pose2d(8.7837315308, 5.5943176404, redDockAngle)
     };
 
 
@@ -181,7 +181,7 @@ public class Camera extends SubsystemBase{
             visionPos = PhotonUtils.estimateFieldToRobotAprilTag(
                 validTagMeasures, 
                 tagPose3ds[idx], 
-                robotToCamera
+                robotToCamera.inverse()
             ).toPose2d();
         }
         else{

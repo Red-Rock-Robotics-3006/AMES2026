@@ -33,8 +33,8 @@ public class Odometry extends SubsystemBase{
         super("Odometry");
 
         Supplier<Rotation2d> gyrRotation = () -> csd.getState().Pose.getRotation();
-        cameras.add(new Camera("LeftCam", gyrRotation, 0.315, -0.287, 0.19, Units.degreesToRadians(0), -Units.degreesToRadians(70), Units.degreesToRadians(20))); //TODO name and add vals to cams
-        cameras.add(new Camera("RightCam", gyrRotation, -0.315, -0.287, 0.19, Units.degreesToRadians(0), -Units.degreesToRadians(70), Units.degreesToRadians(-20)));
+        cameras.add(new Camera("LeftCam", gyrRotation, -0.287, -.315, 0.19, Units.degreesToRadians(0), -Units.degreesToRadians(70), Units.degreesToRadians(20))); //TODO name and add vals to cams
+        cameras.add(new Camera("RightCam", gyrRotation, 0.287, -0.315, 0.19, Units.degreesToRadians(0), -Units.degreesToRadians(70), Units.degreesToRadians(-20)));
     
     }
 
