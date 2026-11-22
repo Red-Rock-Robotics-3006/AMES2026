@@ -49,7 +49,7 @@ public class AutoAlign extends SubsystemBase{
     private PIDController pidY = new PIDController(yP.getNumber(), 0, yD.getNumber());
 
     //Alignment Thresholds
-    private SmartDashboardNumber translationThreshold = new SmartDashboardNumber("AutoAlign/translationThreshold", 0);
+    private SmartDashboardNumber translationThreshold = new SmartDashboardNumber("AutoAlign/translationThreshold", 0.5);
     private SmartDashboardNumber rotationThreshold = new SmartDashboardNumber("AutoAlign/rotationThreshold", 1);
     
     //Interfacing with CSD, this is a robot centric pose because this uses 2d tracking
@@ -59,6 +59,11 @@ public class AutoAlign extends SubsystemBase{
     private final Odometry odometry = Odometry.getInstance();
     private Pose2d relativePose2d = new Pose2d();
 
+    //Sim stuff
+    private SmartDashboardNumber simX = new SmartDashboardNumber("AutoAlign/Sim/x", 0);
+    private SmartDashboardNumber simY = new SmartDashboardNumber("AutoAlign/Sim/y", 0);
+    private SmartDashboardNumber simTheta = new SmartDashboardNumber("AutoAlign/Sim/theta", 20);
+
 
     //The target exists to be used in the methods here; it gets set in the autoAlignToTarget method and gets interfaced by the odometry logic in periodic.
     private int target = -1;
@@ -67,6 +72,7 @@ public class AutoAlign extends SubsystemBase{
         super("AutoAlign");
         //Theta can loop around like a circle
         pidTheta.enableContinuousInput(-Math.PI, Math.PI);
+        SmartDashboard.putData("AutoAlign/AngleOnlySim", autoAlignToTarget(true));
     }
 
     //Request builders, use PID and clamp to max translation and rotation speeds.
@@ -134,7 +140,8 @@ public class AutoAlign extends SubsystemBase{
                         withVelocityX(getXPID(this.relativePose2d.getX())).
                         withVelocityY(getYPID(this.relativePose2d.getY())).
                         withRotationalRate(getAnglePID(this.relativePose2d.getRotation().getRadians())));
-
+        SmartDashboard.putNumber("AutoAlign/commandedOmega", getAnglePID(this.relativePose2d.getRotation().getRadians()));
+        SmartDashboard.putNumber("AutoAlign/measuredOmega", csd.getState().Speeds.omegaRadiansPerSecond);
     }
 
 
@@ -208,6 +215,14 @@ public class AutoAlign extends SubsystemBase{
             SmartDashboard.putNumber("AutoAlign/TargetAngles/Relative-Angle-From-Target-" + n, odometry.get2dYawToTargetAllCams(n).getDegrees());
         }
 
+    }
+
+    @Override
+    public void simulationPeriodic(){
+        double error = simTheta.getNumber() - csd.getState().Pose.getRotation().getDegrees();
+        this.relativePose2d = new Pose2d(simX.getNumber(), simY.getNumber(), Rotation2d.fromDegrees(error));
+        SmartDashboard.putNumber("AutoAlign/sim/errorYaw", error);
+        SmartDashboard.putNumber("AutoAlign/sim/currentYaw", csd.getState().Pose.getRotation().getDegrees());
     }
 
     public static AutoAlign getInstance(){

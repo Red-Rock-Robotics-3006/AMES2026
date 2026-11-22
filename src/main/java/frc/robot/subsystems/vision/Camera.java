@@ -37,7 +37,7 @@ public class Camera extends SubsystemBase{
     private Transform3d robotToCamera;
 
 
-    private Pose3d[] tagPose3ds = { //TODO use field cad
+    private Pose3d[] tagPose3ds = { 
         new Pose3d(new Translation3d(9.3340855482, 5.0668855482, 0.6096), new Rotation3d(0, 0, (3*Math.PI)/4)), //red (roll: 90 deg, yaw: 135 deg)
         new Pose3d(new Translation3d(7.1251144518, 2.8579144518, 0.6096), new Rotation3d(0, 0, -(Math.PI)/4))  //blue (roll: 90 deg, yaw: 135 deg)  
     };
@@ -155,7 +155,7 @@ public class Camera extends SubsystemBase{
         if(!unreadResults.isEmpty()){
             result = unreadResults.get(unreadResults.size() -1);
             latestResultTimeStamp = result.getTimestampSeconds();
-            
+
             target = result.hasTargets()? result.getBestTarget(): null;
             if(target != null){
                 SmartDashboard.putNumber("Camera/targetTag/-pitch", target.getPitch());

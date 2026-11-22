@@ -9,20 +9,20 @@ import java.lang.StackWalker.Option;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.drivetrain.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drivetrain.Telemetry;
 
 public class Robot extends TimedRobot {
-  private Superstructure superstructure;
-  private CommandSwerveDrivetrain csd;
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
 
+  // Superstructure superstructure = Superstructure.getInstance();
+  Arm arm = Arm.getInstance();
+  CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
   public Robot() {
     m_robotContainer = new RobotContainer();
-    superstructure = Superstructure.getInstance();
-    csd = CommandSwerveDrivetrain.getInstance();
   }
 
   @Override
@@ -63,7 +63,8 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-    superstructure.initializeBot();
+    // superstructure.initializeBot();
+    arm.zeroArmCommandMove();
   }
 
   @Override
