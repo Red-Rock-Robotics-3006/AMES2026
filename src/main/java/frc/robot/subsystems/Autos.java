@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.Superstructure;
 import frc.robot.Superstructure.DockColumns;
 import frc.robot.Superstructure.RobotState;
@@ -19,11 +20,11 @@ public class Autos {
 
     private final Superstructure superstructure = Superstructure.getInstance();
     private final CommandSwerveDrivetrain csd = CommandSwerveDrivetrain.getInstance();
-
+    private final EndEffector endEffector = EndEffector.getInstance();
     // private final AutoFactory factory;
 
 
-    private SmartDashboardNumber waitShootSec = new SmartDashboardNumber("Autos/shoot-wait", 2);
+    private SmartDashboardNumber waitShootSec = new SmartDashboardNumber("Autos/shoot-wait", 10);
 
 
     // public Autos(){
@@ -34,7 +35,14 @@ public class Autos {
     public Command testSlowAuto(){
         return 
             Commands.sequence(
-                csd.followTrajectoryCmd("testSlow")
+                Commands.parallel(
+                    csd.followTrajectoryCmd("testSlow"),
+                    superstructure.goToArmPosStaticCommand(RobotState.L3)
+                ),
+                Commands.deadline(      //Shouldn't need autoalign auto should correctly align
+                    Commands.waitSeconds(this.waitShootSec.getNumber()),
+                    superstructure.endEffectStaticCommand()
+                )
             );
     }
 
@@ -42,29 +50,35 @@ public class Autos {
     public Command Blue2ShellAuto(){
         return Commands.sequence(
             Commands.parallel(
-                Commands.runOnce(() ->superstructure.setWantedRobotState(RobotState.L3), superstructure),
+                superstructure.goToArmPosStaticCommand(RobotState.L3),
                 csd.followTrajectoryCmd("B2Shell", 0)
             ),
-            Commands.waitUntil(() -> superstructure.atWantedArmPosSuperstructure()),
             Commands.deadline(      //Shouldn't need autoalign auto should correctly align
                 Commands.waitSeconds(this.waitShootSec.getNumber()),
-                superstructure.endEffectCommand()
+                superstructure.endEffectStaticCommand(),
+                csd.stopCommand()
             ),            
             Commands.parallel(
-                Commands.runOnce(() ->superstructure.setWantedRobotState(RobotState.SOURCE_SHELL), superstructure),
+                endEffector.stopEndEffectorCommand(),
+                superstructure.goToArmPosStaticCommand(RobotState.SOURCE_SHELL),
                 csd.followTrajectoryCmd("B2Shell", 1)
             ),
-            Commands.waitUntil(() -> superstructure.atWantedArmPosSuperstructure()),
-            superstructure.intakeEndEffectCommand(),
+            Commands.deadline(
+                Commands.waitSeconds(this.waitShootSec.getNumber()),
+                endEffector.runIntakeTestCommand(),
+                csd.stopCommand()
+            ),
             Commands.parallel(
-                Commands.runOnce(() ->superstructure.setWantedRobotState(RobotState.L2), superstructure),
+                endEffector.stopEndEffectorCommand(),
+                superstructure.goToArmPosStaticCommand(RobotState.L2),
                 csd.followTrajectoryCmd("B2Shell", 2)
             ),
-            Commands.waitUntil(() -> superstructure.atWantedArmPosSuperstructure()),
             Commands.deadline(      //Shouldn't need autoalign auto should correctly align
                 Commands.waitSeconds(this.waitShootSec.getNumber()),
-                superstructure.endEffectCommand()
-            )
+                superstructure.endEffectStaticCommand(),
+                csd.stopCommand()
+            ),
+            endEffector.stopEndEffectorCommand()
         );
     }
 

@@ -62,8 +62,8 @@ public class RobotContainer {
   private double distToTarget;
 
   public RobotContainer() {
-    configureTestBindings();
-    // configureBindings();
+    // configureTestBindings();
+    configureBindings();
     configureAutoChooser();
   }
 

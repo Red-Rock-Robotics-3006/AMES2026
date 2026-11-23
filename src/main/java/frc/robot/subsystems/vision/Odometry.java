@@ -9,6 +9,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.math.numbers.N1; 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -28,7 +29,8 @@ public class Odometry extends SubsystemBase{
    
     private static final Matrix<N3, N1> visionStdDevs  = VecBuilder.fill(0.05, 0.05, 99999999);
 
-   
+    private Field2d fieldPosAutos = new Field2d();
+
     public Odometry(){
         super("Odometry");
 
@@ -62,8 +64,9 @@ public class Odometry extends SubsystemBase{
             if(pos != null)
                csd.addVisionMeasurement(pos, camera.getLatestTimeStamp(), visionStdDevs);
         }
-    }
-
+        fieldPosAutos.setRobotPose(csd.getState().Pose);
+        SmartDashboard.putData("CommandSwerveDrivetrain/fieldPosCsd", fieldPosAutos);
+    }   
     public static Odometry getInstance(){
         if(instance == null) instance = new Odometry();
         return instance;

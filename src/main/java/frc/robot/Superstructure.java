@@ -435,6 +435,11 @@ public class Superstructure extends SubsystemBase{
     public Superstructure(){
         // AutoLogOutputManager.addObject(this);
     }
+
+    @Override
+    public void simulationPeriodic(){
+        SmartDashboard.putNumber("CommandSwerveDrivetrain/speed", csd.getState().Speeds.omegaRadiansPerSecond);
+    }
     public static Superstructure getInstance(){
         if(instance == null) instance = new Superstructure();
         return instance;
