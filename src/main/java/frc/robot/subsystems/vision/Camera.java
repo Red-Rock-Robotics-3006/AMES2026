@@ -38,11 +38,11 @@ public class Camera extends SubsystemBase{
 
 
     private Pose3d[] tagPose3ds = { 
-        new Pose3d(new Translation3d(9.3340855482, 5.0668855482, 0.6096), new Rotation3d(0, 0, (3*Math.PI)/4)), //red (roll: 90 deg, yaw: 135 deg)
-        new Pose3d(new Translation3d(7.1251144518, 2.8579144518, 0.6096), new Rotation3d(0, 0, -(Math.PI)/4))  //blue (roll: 90 deg, yaw: 135 deg)  
+        new Pose3d(new Translation3d(9.3340855482, 5.0668855482, 0.6096), new Rotation3d(0, 0, Math.toRadians(45))), //red (roll: 90 deg, yaw: 135 deg)
+        new Pose3d(new Translation3d(7.1251144518, 2.8579144518, 0.6096), new Rotation3d(0, 0, Math.toRadians(225)))  //blue (roll: 90 deg, yaw: 135 deg)  
     };
 
-    Rotation2d blueDockAngle = Rotation2d.fromDegrees(-45);
+    Rotation2d blueDockAngle = Rotation2d.fromDegrees(225);
     private Pose2d[] blueDockTargets = { //TODO use field cad
         new Pose2d(6.558322799,  3.3726817484, blueDockAngle), //furthest to the left facing dock
         new Pose2d(6.923765807, 3.0103228592, blueDockAngle),
@@ -50,7 +50,7 @@ public class Camera extends SubsystemBase{
         new Pose2d(7.6421862904, 2.2953930978, blueDockAngle)
     };
 
-    Rotation2d redDockAngle =  Rotation2d.fromDegrees(135);
+    Rotation2d redDockAngle =  Rotation2d.fromDegrees(45);
     private Pose2d[] redDockTargets = {
         new Pose2d(9.8613397134, 4.5168199732, redDockAngle), //furthest to the left looking at the doc
         new Pose2d(9.5021361392, 4.8759766844,redDockAngle),
@@ -132,6 +132,14 @@ public class Camera extends SubsystemBase{
             : PhotonUtils.getYawToPose(robotPos, blueDockTargets[target]);
     }
 
+    //gives in error, so when at target will be 0
+    public Pose2d getRelativePosToTarget(int target){
+        if(robotPos == null) return null;
+        Pose2d tarPose2d = isRedAlliance.getValue()
+            ? redDockTargets[target]
+            : blueDockTargets[target];
+        return tarPose2d.relativeTo(robotPos);
+    }
 
     public Pose2d getRobotPose2d(){
         return this.robotPos;

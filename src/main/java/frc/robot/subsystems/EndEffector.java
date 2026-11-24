@@ -42,7 +42,7 @@ public class EndEffector extends SubsystemBase{
     private SmartDashboardNumber keepPieceInSpeed = new SmartDashboardNumber("EndEffector/keep-pieces-in-end-effector-velocity", 10);
     private SmartDashboardNumber currentLimit = new SmartDashboardNumber("EndEffector/current-limit", 90);
     private SmartDashboardNumber testSpeed = new SmartDashboardNumber("EndEffector/test-speed", 2500);
-    private SmartDashboardNumber testIntakeSpeed = new SmartDashboardNumber("EndEffector/test-intake-speed", -200);
+    private SmartDashboardNumber testIntakeSpeed = new SmartDashboardNumber("EndEffector/test-intake-speed", -220);
 
     private boolean accessedSpeed = false;
 

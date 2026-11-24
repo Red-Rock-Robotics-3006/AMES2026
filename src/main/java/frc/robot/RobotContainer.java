@@ -101,7 +101,7 @@ public class RobotContainer {
         endEffector.runIntakeTestCommand(), 
         intake.startIntakeCommand())
       )
-      .onFalse(intake.stopIntakeCommand());
+      .onFalse(Commands.sequence(intake.stopIntakeCommand(), endEffector.stopEndEffectorCommand()));
     driveStick.povDown().onTrue(intake.reverseIntakeCommand()).onFalse(intake.stopIntakeCommand());
 
     // driveStick.leftTrigger(0.25)

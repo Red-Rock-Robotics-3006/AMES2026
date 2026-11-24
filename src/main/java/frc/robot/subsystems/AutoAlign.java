@@ -34,9 +34,9 @@ public class AutoAlign extends SubsystemBase{
     
     //PID and movement
     private SmartDashboardNumber maxTranslationSpeed = new SmartDashboardNumber("AutoAlign/maxTranslationSpeed", .5);
-    private SmartDashboardNumber maxRotationSpeed = new SmartDashboardNumber("AutoAlign/maxRotationSpeed", 2);
+    private SmartDashboardNumber maxRotationSpeed = new SmartDashboardNumber("AutoAlign/maxRotationSpeed", 3);
 
-    private SmartDashboardNumber thetaP = new SmartDashboardNumber("AutoAlign/Theta/thetaP", 3);
+    private SmartDashboardNumber thetaP = new SmartDashboardNumber("AutoAlign/Theta/thetaP", 9);
     private SmartDashboardNumber thetaD = new SmartDashboardNumber("AutoAlign/Theta/thetaD", 0);
     private PIDController pidTheta = new PIDController(thetaP.getNumber(), 0, thetaD.getNumber());
     
@@ -186,22 +186,24 @@ public class AutoAlign extends SubsystemBase{
         this.target = (int) SmartDashboard.getNumber("Superstructure/dockTargetInt", -1);
 
         //Update odometry values
-        Double distFromTarget = null;
-        Double angleFromTarget = null;
-        Rotation2d yaw = target!=-1 ? odometry.get2dYawToTargetAllCams(target):null;
-        SmartDashboard.putNumber("AutoAlign/Theoretical-target", target);
+        // Double distFromTarget = null;
+        // Double angleFromTarget = null;
+        // Rotation2d yaw = target!=-1 ? odometry.get2dYawToTargetAllCams(target):null;
+        // SmartDashboard.putNumber("AutoAlign/Theoretical-target", target);
 
-        if(yaw != null){
-            distFromTarget = odometry.get2dDistToTargetAllCams(this.target);
-            angleFromTarget = yaw.getRadians();
-        }
+        // if(yaw != null){
+        //     distFromTarget = odometry.get2dDistToTargetAllCams(this.target);
+        //     angleFromTarget = yaw.getRadians();
+        // }
 
-        if(distFromTarget == null || angleFromTarget == null){
-            this.relativePose2d = null;
-        }
-        else{
-            this.relativePose2d = new Pose2d(distFromTarget * Math.cos(angleFromTarget), distFromTarget * Math.sin(angleFromTarget), yaw);
-        }
+        // if(distFromTarget == null || angleFromTarget == null){
+        //     this.relativePose2d = null;
+        // }
+        // else{
+        //     this.relativePose2d = new Pose2d(distFromTarget * Math.cos(angleFromTarget), distFromTarget * Math.sin(angleFromTarget), yaw);
+        // }
+
+        this.relativePose2d = target != -1 ? odometry.getRelativePosToTargetAllCams(target): null;
 
         if(this.relativePose2d != null){
             field2d.setRobotPose(relativePose2d);
@@ -211,8 +213,7 @@ public class AutoAlign extends SubsystemBase{
             SmartDashboard.putNumber("AutoAlign/Relative-Theta-from-Target", this.relativePose2d.getRotation().getDegrees());
             SmartDashboard.putNumber("AutoAlign/Relative-Theta-from-Target-Radians", this.relativePose2d.getRotation().getRadians());
             SmartDashboard.putBoolean("AutoAlign/alignedToTargetTheta", this.alignedToTargetAngleOnly());
-            for(int n = 0; n<4; n++)
-            SmartDashboard.putNumber("AutoAlign/TargetAngles/Relative-Angle-From-Target-" + n, odometry.get2dYawToTargetAllCams(n).getDegrees());
+            // SmartDashboard.putNumber("AutoAlign/TargetAngles/Relative-Angle-From-Target-" + n, odometry.get2dYawToTargetAllCams(n).getDegrees());
         }
 
     }

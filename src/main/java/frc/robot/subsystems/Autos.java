@@ -24,7 +24,7 @@ public class Autos {
     // private final AutoFactory factory;
 
 
-    private SmartDashboardNumber waitShootSec = new SmartDashboardNumber("Autos/shoot-wait", 10);
+    private SmartDashboardNumber waitShootSec = new SmartDashboardNumber("Autos/shoot-wait", 6);
 
 
     // public Autos(){
@@ -42,7 +42,8 @@ public class Autos {
                 Commands.deadline(      //Shouldn't need autoalign auto should correctly align
                     Commands.waitSeconds(this.waitShootSec.getNumber()),
                     superstructure.endEffectStaticCommand()
-                )
+                ),
+                endEffector.stopEndEffectorCommand()
             );
     }
 
@@ -58,8 +59,8 @@ public class Autos {
                 superstructure.endEffectStaticCommand(),
                 csd.stopCommand()
             ),            
+            endEffector.stopEndEffectorCommand(),
             Commands.parallel(
-                endEffector.stopEndEffectorCommand(),
                 superstructure.goToArmPosStaticCommand(RobotState.SOURCE_SHELL),
                 csd.followTrajectoryCmd("B2Shell", 1)
             ),
@@ -68,8 +69,8 @@ public class Autos {
                 endEffector.runIntakeTestCommand(),
                 csd.stopCommand()
             ),
+            endEffector.stopEndEffectorCommand(),
             Commands.parallel(
-                endEffector.stopEndEffectorCommand(),
                 superstructure.goToArmPosStaticCommand(RobotState.L2),
                 csd.followTrajectoryCmd("B2Shell", 2)
             ),

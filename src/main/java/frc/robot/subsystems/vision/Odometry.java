@@ -35,8 +35,9 @@ public class Odometry extends SubsystemBase{
         super("Odometry");
 
         Supplier<Rotation2d> gyrRotation = () -> csd.getState().Pose.getRotation();
-        cameras.add(new Camera("LeftCam", gyrRotation, -0.287, -.315, 0.19, Units.degreesToRadians(0), -Units.degreesToRadians(70), Units.degreesToRadians(20))); //TODO name and add vals to cams
-        cameras.add(new Camera("RightCam", gyrRotation, 0.287, -0.315, 0.19, Units.degreesToRadians(0), -Units.degreesToRadians(70), Units.degreesToRadians(-20)));
+        //x and y could be flipped along with sign, pitch could be -70 or -20, and yaw could switch signs
+        cameras.add(new Camera("LeftCam", gyrRotation, -0.315, 0.287, 0.19, Units.degreesToRadians(0), -Units.degreesToRadians(20), Units.degreesToRadians(20))); //TODO name and add vals to cams
+        cameras.add(new Camera("RightCam", gyrRotation, -0.315, -0.287, 0.19, Units.degreesToRadians(0), -Units.degreesToRadians(20), Units.degreesToRadians(-20)));
     
     }
 
@@ -55,7 +56,14 @@ public class Odometry extends SubsystemBase{
         }
         return null;
     }
-
+    
+    public Pose2d getRelativePosToTargetAllCams(int target){
+        for(Camera cam: cameras){
+            if(cam.getValidTagMeasurements() != null)
+                return cam.getRelativePosToTarget(target);
+        }
+        return null;
+    }
     @Override
     public void periodic(){
         //For autos adds vision measurement when close to game element to hopefully reduce shifting pos
