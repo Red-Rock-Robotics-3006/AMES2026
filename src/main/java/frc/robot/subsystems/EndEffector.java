@@ -40,7 +40,7 @@ public class EndEffector extends SubsystemBase{
     private SmartDashboardNumber intakeVelocity = new SmartDashboardNumber("EndEffector/intaking-velocity", -200);
     private SmartDashboardNumber outakeVelocity = new SmartDashboardNumber("EndEffector/outaking-velocity", 500);
     private SmartDashboardNumber keepPieceInSpeed = new SmartDashboardNumber("EndEffector/keep-pieces-in-end-effector-velocity", 10);
-    private SmartDashboardNumber currentLimit = new SmartDashboardNumber("EndEffector/current-limit", 90);
+    private SmartDashboardNumber currentLimit = new SmartDashboardNumber("EndEffector/current-limit", 130);
     private SmartDashboardNumber testSpeed = new SmartDashboardNumber("EndEffector/test-speed", 2500);
     private SmartDashboardNumber testIntakeSpeed = new SmartDashboardNumber("EndEffector/test-intake-speed", -220);
 
@@ -78,9 +78,9 @@ public class EndEffector extends SubsystemBase{
         .withSpikeThreshold(17)
         .withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(120)
+            .withSupplyCurrentLimit(150)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(120)
+            .withStatorCurrentLimit(150)
             .withStatorCurrentLimitEnable(true)
         ).withTuningEnabled(true);
     }

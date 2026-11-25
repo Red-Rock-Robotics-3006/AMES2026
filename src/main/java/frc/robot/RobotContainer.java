@@ -104,6 +104,8 @@ public class RobotContainer {
       .onFalse(Commands.sequence(intake.stopIntakeCommand(), endEffector.stopEndEffectorCommand()));
     driveStick.povDown().onTrue(intake.reverseIntakeCommand()).onFalse(intake.stopIntakeCommand());
 
+    driveStick.x()
+      .onTrue(arm.goToTestPosCommand());
     // driveStick.leftTrigger(0.25)
     //   .onTrue(endEffector.shootTestCommand2(superstructure.stateToVelocitySTATIC(superstructure.getWantedState())))
     //   .onFalse(endEffector.stopEndEffectorCommand());

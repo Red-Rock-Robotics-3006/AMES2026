@@ -204,11 +204,11 @@ public class Superstructure extends SubsystemBase{
     private double stateToVelocity(Superstructure.RobotState state, double dist){
         switch(state){
             case L1:
-                return LERPTables.l1RPMLerpTable.get(dist);
+                return LERPTables.l1RPSLerpTable.get(dist);
             case L2:
-                return LERPTables.l2RPMLerpTable.get(dist);
+                return LERPTables.l2RPSLerpTable.get(dist);
             case L3:
-                return LERPTables.l2RPMLerpTable.get(dist);
+                return LERPTables.l2RPSLerpTable.get(dist);
             case INTAKING_CELL:
                 return this.intakingCellVel.getNumber();
             case INTAKING_SHELL:
