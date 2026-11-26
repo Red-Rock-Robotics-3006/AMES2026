@@ -18,12 +18,12 @@ public class Intake extends SubsystemBase {
 
     public static final boolean kEnableIntakeTuning = true;
 
-    private RedRockTalon intakeMotorOne = new RedRockTalon(11, "intake-motor-one"); //TODO: Change the ID to the correct one
-    private RedRockTalon intakeMotorTwo = new RedRockTalon(12, "intake-motor-two"); //TODO: Change the ID to the correct one
+    private RedRockTalon intakeMotorOne = new RedRockTalon(41, "intake-motor-one"); //TODO: Change the ID to the correct one
+    private RedRockTalon intakeMotorTwo = new RedRockTalon(42, "intake-motor-two"); //TODO: Change the ID to the correct one
 
-    private SmartDashboardNumber intakeTargetSpeed = new SmartDashboardNumber("intake/target/intake speed", 0, kEnableIntakeTuning && true); //TODO: Change the default value to the correct one
-    private SmartDashboardNumber intakeTargetSpeedRatio = new SmartDashboardNumber("intake/target/intake speed ratio", 0, kEnableIntakeTuning && true); //TODO: Change the default value to the correct one //ratio of the speed of motor 1 to motor 2
-    private SmartDashboardNumber intakeTargetReverseSpeed = new SmartDashboardNumber("intake/target/intake reverse speed", 0, kEnableIntakeTuning && true); //TODO: Change the default value to the correct one
+    private SmartDashboardNumber intakeTargetSpeed = new SmartDashboardNumber("intake/target/intake-speed", -0.3); //TODO: Change the default value to the correct one
+    private SmartDashboardNumber intakeTargetSpeedRatio = new SmartDashboardNumber("intake/target/intake-speed-ratio", 1); //TODO: Change the default value to the correct one //ratio of the speed of motor 1 to motor 2
+    private SmartDashboardNumber intakeTargetReverseSpeed = new SmartDashboardNumber("intake/target/intake-reverse-speed", 0.3); //TODO: Change the default value to the correct one
 
     public Intake() {
         super();
@@ -36,9 +36,9 @@ public class Intake extends SubsystemBase {
             .withPeakReverseDutyCycle(-1d)
             .withNeutralMode(NeutralModeValue.Brake)
         ).withCurrentLimitConfigs(new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(40)
+            .withSupplyCurrentLimit(60)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(80)
+            .withStatorCurrentLimit(100)
             .withStatorCurrentLimitEnable(true)
         );
 
@@ -50,9 +50,9 @@ public class Intake extends SubsystemBase {
             .withPeakReverseDutyCycle(-1d)
             .withNeutralMode(NeutralModeValue.Brake)
         ).withCurrentLimitConfigs(new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(40)
+            .withSupplyCurrentLimit(60)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(80)
+            .withStatorCurrentLimit(100)
             .withStatorCurrentLimitEnable(true)
         );
     }
@@ -94,7 +94,7 @@ public class Intake extends SubsystemBase {
 
         if (kEnableIntakeTuning) {
             SmartDashboard.putNumber("intake/real monitoring/motor one speed",intakeMotorOne.motor.getVelocity().getValueAsDouble());
-            SmartDashboard.putNumber("intale/real monitoring/motor two speed", intakeMotorTwo.motor.getVelocity().getValueAsDouble());
+            SmartDashboard.putNumber("intake/real monitoring/motor two speed", intakeMotorTwo.motor.getVelocity().getValueAsDouble());
             SmartDashboard.putNumber("intake/real monitoring/speed ratio", intakeMotorTwo.motor.getVelocity().getValueAsDouble()/intakeMotorOne.motor.getVelocity().getValueAsDouble());
         }
     }
