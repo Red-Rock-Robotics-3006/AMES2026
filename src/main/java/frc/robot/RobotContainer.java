@@ -87,8 +87,7 @@ public class RobotContainer {
     // Drivestick bindings
     driveStick.rightTrigger(0.25) //Shoots with lerp
       .onTrue(
-        superstructure.endEffectStaticCommand())
-          // .onlyIf(() -> odometry.get2dDistToTargetAllCams(superstructure.getIntDockCol(superstructure.getDockColumn())) <= 5))
+        superstructure.endEffectCommandBoth())
       .onFalse(endEffector.stopEndEffectorCommand());
     
     driveStick.leftTrigger(0.25)
@@ -98,7 +97,7 @@ public class RobotContainer {
       .onFalse(endEffector.stopEndEffectorCommand());
     driveStick.rightBumper()
       .onTrue(Commands.sequence(
-        endEffector.runIntakeTestCommand(), 
+        endEffector.intakeCommand(), 
         intake.startIntakeCommand())
       )
       .onFalse(Commands.sequence(intake.stopIntakeCommand(), endEffector.stopEndEffectorCommand()));
@@ -114,11 +113,11 @@ public class RobotContainer {
     mechStick.povCenter()
       	.onTrue(Commands.runOnce(() -> superstructure.setDockTarget(DockColumns.NONE)));
     mechStick.povUp()
-      .onTrue(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.LEFT);SmartDashboard.putNumber("Superstructure/dockTargetInt", superstructure.getIntDockCol(DockColumns.LEFT));}, superstructure))
+      .onTrue(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.LEFT_MID);SmartDashboard.putNumber("Superstructure/dockTargetInt", superstructure.getIntDockCol(DockColumns.LEFT));}, superstructure))
       .onFalse(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.NONE);SmartDashboard.putNumber("Superstructure/dockTargetInt", -1);}, superstructure));
 
     mechStick.povLeft()
-      .onTrue(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.LEFT_MID);SmartDashboard.putNumber("Superstructure/dockTargetInt", superstructure.getIntDockCol(DockColumns.LEFT_MID));}, superstructure))
+      .onTrue(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.LEFT);SmartDashboard.putNumber("Superstructure/dockTargetInt", superstructure.getIntDockCol(DockColumns.LEFT_MID));}, superstructure))
       .onFalse(Commands.runOnce(() -> {superstructure.setDockTarget(DockColumns.NONE);SmartDashboard.putNumber("Superstructure/dockTargetInt", -1);}, superstructure));
 
     mechStick.povRight()
@@ -143,11 +142,14 @@ public class RobotContainer {
 	    .onTrue(superstructure.goToArmPosStaticCommand(RobotState.SHELF))
       .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_SHELL));
     mechStick.rightBumper()
-	    .onTrue(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_CELL))
-      .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTERMEDIATE));
-    mechStick.leftBumper()
-	    .onTrue(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_SHELL))
-      .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTERMEDIATE));
+      .onTrue(superstructure.goToIntakePos())
+      .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_SHELL));
+    // mechStick.rightBumper()
+	  //   .onTrue(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_CELL))
+    //   .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTERMEDIATE));
+    // mechStick.leftBumper()
+	  //   .onTrue(superstructure.goToArmPosStaticCommand(RobotState.INTAKING_SHELL))
+    //   .onFalse(superstructure.goToArmPosStaticCommand(RobotState.INTERMEDIATE));
 
     mechStick.rightTrigger().onTrue(arm.zeroArmCommandMove());
     mechStick.leftTrigger().onTrue(arm.goToTestPosCommand());

@@ -264,6 +264,10 @@ public class Superstructure extends SubsystemBase{
             : arm.atWantedArmPos(stateToArmPosStatic(wantedState));
     }
 
+    public boolean seesTargetTag(){
+        return this.distanceFromTarget != -1;
+    }
+
     public Command endEffectCommand(){
         return Commands.defer(
             () -> this.endEffector.shootCommand(stateToVelocity(this.wantedState, this.distanceFromTarget)), 
@@ -278,6 +282,16 @@ public class Superstructure extends SubsystemBase{
         );
     }
     
+    public Command endEffectCommandBoth(){
+        return Commands.defer(
+            () -> Commands.either(
+                this.endEffector.shootCommand(stateToVelocitySTATIC(this.wantedState)), 
+                this.endEffector.shootCommand(stateToVelocity(this.wantedState, this.distanceFromTarget)), 
+                () -> !seesTargetTag()
+            ), 
+            Set.of(this)
+        );
+    }
     //Superstructure-specific commands
     
     public void setWantedRobotState(RobotState state){
@@ -344,10 +358,14 @@ public class Superstructure extends SubsystemBase{
     }
     
     public Command goToIntakePos(){
-        if(endEffector.getIntakeState() == IntakeState.NOTHING)
-            return this.goToArmPosStaticCommand(RobotState.INTAKING_SHELL);
-        else
-        return this.goToArmPosStaticCommand(RobotState.INTAKING_CELL);
+        return Commands.defer(
+            () -> Commands.either(
+                this.goToArmPosStaticCommand(RobotState.INTAKING_SHELL), 
+                this.goToArmPosStaticCommand(RobotState.INTAKING_CELL), 
+                () -> endEffector.getIntakeState() == IntakeState.NOTHING
+            ),
+            Set.of(arm)
+        );
     }
     
     public Command idleCommand(){

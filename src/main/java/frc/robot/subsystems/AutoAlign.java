@@ -36,8 +36,8 @@ public class AutoAlign extends SubsystemBase{
     private SmartDashboardNumber maxTranslationSpeed = new SmartDashboardNumber("AutoAlign/maxTranslationSpeed", .5);
     private SmartDashboardNumber maxRotationSpeed = new SmartDashboardNumber("AutoAlign/maxRotationSpeed", 3);
 
-    private SmartDashboardNumber thetaP = new SmartDashboardNumber("AutoAlign/Theta/thetaP", 9);
-    private SmartDashboardNumber thetaD = new SmartDashboardNumber("AutoAlign/Theta/thetaD", 0);
+    private SmartDashboardNumber thetaP = new SmartDashboardNumber("AutoAlign/Theta/thetaP", 6);
+    private SmartDashboardNumber thetaD = new SmartDashboardNumber("AutoAlign/Theta/thetaD", 0.5);
     private PIDController pidTheta = new PIDController(thetaP.getNumber(), 0, thetaD.getNumber());
     
     private SmartDashboardNumber xP = new SmartDashboardNumber("AutoAlign/X/xP", 1);
