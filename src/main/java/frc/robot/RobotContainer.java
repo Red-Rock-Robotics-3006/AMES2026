@@ -71,8 +71,16 @@ public class RobotContainer {
     chooser.setDefaultOption("noAuto", Commands.runOnce(() -> System.out.println("no auto")));
 
     chooser.addOption("testAuto", autos.testSlowAuto());
-    chooser.addOption("Blue2ShellAuto", autos.Blue2ShellAuto());
-    chooser.addOption("Red2ShellAuto", autos.Red2ShellAuto());
+    chooser.addOption("Blue2ShellAuto", autos.blue2ShellAuto());
+    chooser.addOption("Red2ShellAuto", autos.red2ShellAuto());
+    chooser.addOption("Blue3ShellAuto", autos.blue3ShellAuto());
+    chooser.addOption("Red3ShellAuto", autos.red3ShellAuto());
+    chooser.addOption("BlueShelf1", autos.blueShelf1());
+    chooser.addOption("BlueShelf2", autos.blueShelf2());
+    chooser.addOption("BlueShelf3", autos.blueShelf3());
+    chooser.addOption("RedShelf1", autos.redShelf1());
+    chooser.addOption("RedShelf2", autos.redShelf2());
+    chooser.addOption("RedShelf3", autos.redShelf3());
 
     SmartDashboard.putData("Auto Chooser", chooser);
   }

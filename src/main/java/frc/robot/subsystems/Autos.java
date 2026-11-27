@@ -347,6 +347,42 @@ public class Autos {
         );
     }
 
+    public Command redShelf2(){
+        return Commands.sequence(
+            Commands.runOnce(() ->csd.seedFieldCentric()),
+
+            Commands.parallel(
+                superstructure.goToArmPosStaticCommand(RobotState.SHELF),
+                csd.followTrajectoryCmd("RShelf2", 0)
+            ),
+            csd.stopCommand(),
+
+            Commands.deadline(
+                Commands.waitSeconds(waitShootSec.getNumber()),
+                superstructure.endEffectCommandBoth() 
+            ),
+            endEffector.stopEndEffectorCommand()
+        );
+    }
+
+    public Command redShelf3(){
+        return Commands.sequence(
+            Commands.runOnce(() ->csd.seedFieldCentric()),
+
+            Commands.parallel(
+                superstructure.goToArmPosStaticCommand(RobotState.SHELF),
+                csd.followTrajectoryCmd("RShelf3", 0)
+            ),
+            csd.stopCommand(),
+
+            Commands.deadline(
+                Commands.waitSeconds(waitShootSec.getNumber()),
+                superstructure.endEffectCommandBoth() 
+            ),
+            endEffector.stopEndEffectorCommand()
+        );
+    }
+
     public Command blueShelf1(){
         return Commands.sequence(
             Commands.runOnce(() ->csd.seedFieldCentric()),
@@ -354,6 +390,41 @@ public class Autos {
             Commands.parallel(
                 superstructure.goToArmPosStaticCommand(RobotState.SHELF),
                 csd.followTrajectoryCmd("BShelf1", 0)
+            ),
+            csd.stopCommand(),
+
+            Commands.deadline(
+                Commands.waitSeconds(waitShootSec.getNumber()),
+                superstructure.endEffectCommandBoth() 
+            ),
+            endEffector.stopEndEffectorCommand()
+        );
+    }
+    
+    public Command blueShelf2(){
+        return Commands.sequence(
+            Commands.runOnce(() ->csd.seedFieldCentric()),
+
+            Commands.parallel(
+                superstructure.goToArmPosStaticCommand(RobotState.SHELF),
+                csd.followTrajectoryCmd("BShelf2", 0)
+            ),
+            csd.stopCommand(),
+
+            Commands.deadline(
+                Commands.waitSeconds(waitShootSec.getNumber()),
+                superstructure.endEffectCommandBoth() 
+            ),
+            endEffector.stopEndEffectorCommand()
+        );
+    }
+    public Command blueShelf3(){
+        return Commands.sequence(
+            Commands.runOnce(() ->csd.seedFieldCentric()),
+
+            Commands.parallel(
+                superstructure.goToArmPosStaticCommand(RobotState.SHELF),
+                csd.followTrajectoryCmd("BShelf3", 0)
             ),
             csd.stopCommand(),
 
